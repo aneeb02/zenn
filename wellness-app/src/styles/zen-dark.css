@@ -1,0 +1,367 @@
+/* Zen Dark Theme - Japanese Minimalism with Playful Human Touch */
+
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Core Palette - Inspired by Sumi-e (Japanese Ink Painting) */
+  --ink-black: #0a0a0b;
+  --charcoal: #1a1a1c;
+  --dark-gray: #2a2a2d;
+  --medium-gray: #3a3a3f;
+  --light-gray: #8a8a90;    /* Brightened */
+  --pale-gray: #b5b5bb;      /* Brightened */
+  --off-white: #f8f8f5;      /* Much whiter */
+  --paper: #fefefe;          /* Nearly pure white */
+  
+  /* Accent Colors - Subtle and Natural */
+  --sakura-pink: #d4828f;  /* Cherry blossom pink */
+  --moss-green: #7a9a7e;   /* Forest moss */
+  --twilight-purple: #8b7aa8; /* Evening sky */
+  --amber-glow: #c29b6c;   /* Warm lantern light */
+  --ocean-blue: #6b8cae;   /* Deep water */
+  
+  /* Playful Accent - Used sparingly */
+  --playful-coral: #e8a598;
+  --playful-mint: #a8d5ba;
+  
+  /* Semantic Colors */
+  --background: var(--ink-black);
+  --surface: var(--charcoal);
+  --surface-raised: var(--dark-gray);
+  --border: rgba(255, 255, 255, 0.08);      /* Slightly brighter borders */
+  --border-light: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(255, 255, 255, 0.12); /* New subtle border */
+  
+  /* Text Colors */
+  --text-primary: var(--off-white);      /* Now much whiter */
+  --text-secondary: var(--pale-gray);    /* Brighter gray */
+  --text-muted: var(--light-gray);       /* Brighter muted */
+  
+  /* Spacing - Based on Ma (negative space) concept */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  
+  /* Border Radius - Organic, imperfect */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-organic: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-playful: 'Gaegu', cursive;
+  
+  /* Shadows - Soft and subtle */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 40px rgba(212, 130, 143, 0.1);
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle Noise Texture Overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.02;
+  z-index: 1;
+  pointer-events: none;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.01) 35px, rgba(255,255,255,.01) 70px);
+}
+
+/* Main Container */
+.zen-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+/* Zen Card Component */
+.zen-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.zen-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(212, 130, 143, 0.3) 20%,
+    rgba(212, 130, 143, 0.3) 80%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.zen-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 130, 143, 0.1);
+}
+
+.zen-card:hover::before {
+  opacity: 1;
+}
+
+/* Organic Shape Card */
+.zen-card-organic {
+  border-radius: var(--radius-organic);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
+}
+
+/* Hand-drawn Border Effect */
+.hand-drawn-border {
+  position: relative;
+  border: none !important;
+}
+
+.hand-drawn-border::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--border);
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  pointer-events: none;
+  animation: subtle-morph 20s ease-in-out infinite;
+}
+
+@keyframes subtle-morph {
+  0%, 100% {
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  }
+  33% {
+    border-radius: 15px 255px 15px 225px/225px 15px 255px 15px;
+  }
+  66% {
+    border-radius: 225px 15px 255px 15px/15px 225px 15px 255px;
+  }
+}
+
+/* Typography Styles */
+.zen-heading {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.zen-heading-xl {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.2;
+}
+
+.zen-heading-lg {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.3;
+}
+
+.zen-heading-playful {
+  font-family: var(--font-playful);
+  font-weight: 400;
+  color: var(--sakura-pink);
+  transform: rotate(-2deg);
+  display: inline-block;
+}
+
+/* Ink Brush Text Effect */
+.ink-brush {
+  position: relative;
+  display: inline-block;
+  color: var(--text-primary);
+}
+
+.ink-brush::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: -4px;
+  right: -4px;
+  height: 2px;
+  background: var(--sakura-pink);
+  transform: skewY(-1deg);
+  border-radius: var(--radius-organic);
+  opacity: 0.7;
+}
+
+/* Zen Button */
+.zen-button {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.zen-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: var(--sakura-pink);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s, height 0.5s;
+  opacity: 0.1;
+}
+
+.zen-button:hover {
+  border-color: var(--sakura-pink);
+  color: var(--sakura-pink);
+}
+
+.zen-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Playful Button Variant */
+.zen-button-playful {
+  background: var(--surface-raised);
+  border: none;
+  border-radius: 20px 18px 22px 19px / 18px 20px 19px 22px;
+  font-family: var(--font-playful);
+  font-size: 1rem;
+  transform: rotate(-1deg);
+  transition: all 0.2s ease;
+}
+
+.zen-button-playful:hover {
+  transform: rotate(1deg) scale(1.05);
+  background: var(--sakura-pink);
+  color: var(--ink-black);
+}
+
+/* Floating Elements */
+.floating {
+  animation: floating 6s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Gentle Glow */
+.gentle-glow {
+  box-shadow: 
+    0 0 20px rgba(212, 130, 143, 0.1),
+    0 0 40px rgba(212, 130, 143, 0.05);
+}
+
+/* Circle Decoration */
+.zen-circle {
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.1;
+  animation: zen-rotate 30s linear infinite;
+}
+
+.zen-circle.imperfect {
+  border-radius: 50% 48% 52% 50%;
+}
+
+@keyframes zen-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Subtle Grid Pattern */
+.zen-grid {
+  background-image: 
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.03;
+}
+
+/* Focus States */
+*:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sakura-pink);
+  border-radius: var(--radius-sm);
+}
+
+/* Selection Color */
+::selection {
+  background: var(--sakura-pink);
+  color: var(--ink-black);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--charcoal);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--medium-gray);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--light-gray);
+}

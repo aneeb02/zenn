@@ -1,16 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Heart, Sparkles, Brain, Target, CheckCircle2 } from 'lucide-react';
+import '@/styles/zen-dark.css';
 
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  
+  // Zen moments for the landing page - moved before any conditional returns
+  const [zenMoment, setZenMoment] = useState('');
+  const zenMoments = [
+    "breathe in possibility, breathe out doubt",
+    "your journey begins with a single moment",
+    "find your center, find your peace",
+    "wellness is not a destination, but a way of traveling",
+    "今 (ima) - the present moment is all we have",
+  ];
 
   useEffect(() => {
     if (!loading && user) {
@@ -18,13 +26,23 @@ export default function Home() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
+  
+  useEffect(() => {
+    setZenMoment(zenMoments[Math.floor(Math.random() * zenMoments.length)]);
+  }, []);
 
   // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">
-          <Heart className="h-12 w-12 text-purple-500" />
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: 'var(--background)'
+      }}>
+        <div className="floating">
+          <div className="zen-circle imperfect" style={{ position: 'relative', width: '60px', height: '60px', opacity: 0.3 }}></div>
         </div>
       </div>
     );
@@ -33,113 +51,289 @@ export default function Home() {
   // Show landing page if not logged in
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div style={{ minHeight: '100vh', background: 'var(--background)', position: 'relative', overflow: 'hidden' }}>
+        {/* Decorative circles */}
+        <div className="zen-circle" style={{ top: '5%', left: '10%', width: '200px', height: '200px', opacity: 0.05 }}></div>
+        <div className="zen-circle imperfect" style={{ bottom: '15%', right: '5%', width: '150px', height: '150px', opacity: 0.05 }}></div>
+        <div className="zen-circle" style={{ top: '50%', right: '15%', width: '100px', height: '100px', opacity: 0.03 }}></div>
+        
         {/* Hero Section */}
-        <div className="container mx-auto px-4 pt-20 pb-32">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="flex justify-center mb-8">
-              <div className="p-4 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full">
-                <Heart className="h-12 w-12 text-white" />
-              </div>
+        <div style={{ 
+          padding: 'var(--space-2xl) var(--space-xl)',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            {/* Logo/Brand */}
+            <div style={{ marginBottom: 'var(--space-xl)' }}>
+              <h1 className="zen-heading-playful" style={{ 
+                fontSize: 'clamp(3rem, 8vw, 5rem)',
+                marginBottom: 'var(--space-sm)'
+              }}>
+                zenn
+              </h1>
+              <p style={{ 
+                color: 'var(--text-muted)', 
+                fontSize: '1rem',
+                letterSpacing: '0.1em'
+              }}>
+                wellness • mindfulness • you
+              </p>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Your Personal Wellness Companion
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Daily affirmations, focus sessions, and mindfulness exercises tailored just for you
+            
+            {/* Main heading */}
+            <h2 style={{ 
+              fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+              fontWeight: 200,
+              color: 'var(--text-primary)',
+              marginBottom: 'var(--space-lg)',
+              lineHeight: 1.4
+            }}>
+              your personal space for<br/>
+              <span style={{ color: 'var(--sakura-pink)' }}>mindful moments</span> & 
+              <span style={{ color: 'var(--ocean-blue)' }}> daily wellness</span>
+            </h2>
+            
+            <p style={{ 
+              color: 'var(--text-secondary)',
+              fontSize: '1.1rem',
+              marginBottom: 'var(--space-2xl)',
+              fontStyle: 'italic'
+            }}>
+              `&quot;`{zenMoment}`&quot;`
             </p>
-            <div className="flex gap-4 justify-center">
+            
+            {/* CTA Buttons */}
+            <div style={{ 
+              display: 'flex', 
+              gap: 'var(--space-md)', 
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
               <Link href="/register">
-                <Button size="lg" className="px-8">
-                  Get Started Free
-                </Button>
+                <button className="zen-button-playful" style={{
+                  padding: 'var(--space-md) var(--space-xl)',
+                  fontSize: '1rem'
+                }}>
+                  begin your journey
+                </button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="px-8">
-                  Sign In
-                </Button>
+                <button className="zen-button" style={{
+                  padding: 'var(--space-md) var(--space-xl)',
+                  fontSize: '1rem'
+                }}>
+                  welcome back
+                </button>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Features Section */}
-        <div className="container mx-auto px-4 py-20">
-          <h2 className="text-3xl font-bold text-center mb-12">Transform Your Daily Routine</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <Sparkles className="h-8 w-8 text-purple-600" />
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-center">Daily Affirmations</h3>
-              <p className="text-gray-600 text-center">
-                Personalized positive affirmations based on your goals and health conditions
-              </p>
-            </Card>
+        <section style={{ 
+          padding: 'var(--space-2xl) var(--space-xl)',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <p style={{ 
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              fontSize: '0.9rem',
+              marginBottom: 'var(--space-2xl)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase'
+            }}>
+              what awaits you
+            </p>
             
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Brain className="h-8 w-8 text-blue-600" />
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 'var(--space-lg)'
+            }}>
+              {/* Daily Affirmations */}
+              <div className="zen-card zen-card-organic" style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '2.5rem', 
+                  marginBottom: 'var(--space-md)',
+                  filter: 'grayscale(0.3)'
+                }}>
+                  ✨
                 </div>
+                <h3 style={{ 
+                  color: 'var(--sakura-pink)',
+                  fontSize: '1.1rem',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 400
+                }}>
+                  daily affirmations
+                </h3>
+                <p style={{ 
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.6
+                }}>
+                  personalized mantras crafted for your unique journey & wellness goals
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-center">Focus Sessions</h3>
-              <p className="text-gray-600 text-center">
-                Pomodoro timer, meditation sessions, and ambient sounds for deep work
-              </p>
-            </Card>
-            
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Target className="h-8 w-8 text-green-600" />
+              
+              {/* Focus Sessions */}
+              <div className="zen-card zen-card-organic" style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '2.5rem', 
+                  marginBottom: 'var(--space-md)',
+                  filter: 'grayscale(0.3)'
+                }}>
+                  🧘
                 </div>
+                <h3 style={{ 
+                  color: 'var(--ocean-blue)',
+                  fontSize: '1.1rem',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 400
+                }}>
+                  focus sessions
+                </h3>
+                <p style={{ 
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.6
+                }}>
+                  timer, ambient sounds, and mindful breaks for deep work & meditation
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-center">Progress Tracking</h3>
-              <p className="text-gray-600 text-center">
-                Track your wellness journey with streaks, statistics, and insights
-              </p>
-            </Card>
-          </div>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="bg-white py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Wellness App?</h2>
-            <div className="max-w-3xl mx-auto space-y-4">
-              {[
-                'Customized to your specific health conditions and goals',
-                'Science-backed techniques for mental wellness',
-                'Beautiful, calming interface designed for daily use',
-                'Track your progress and build healthy habits',
-                'Private and secure - your data stays yours',
-              ].map((benefit, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-green-500 mt-0.5" />
-                  <p className="text-lg text-gray-700">{benefit}</p>
+              
+              {/* Progress Tracking */}
+              <div className="zen-card zen-card-organic" style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '2.5rem', 
+                  marginBottom: 'var(--space-md)',
+                  filter: 'grayscale(0.3)'
+                }}>
+                  🌱
                 </div>
-              ))}
+                <h3 style={{ 
+                  color: 'var(--moss-green)',
+                  fontSize: '1.1rem',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 400
+                }}>
+                  gentle progress
+                </h3>
+                <p style={{ 
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.6
+                }}>
+                  track your growth with kindness, celebrating each small victory
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Philosophy Section */}
+        <section style={{ 
+          padding: 'var(--space-2xl) var(--space-xl)',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <div className="zen-card" style={{ 
+            maxWidth: '700px', 
+            margin: '0 auto',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%)'
+          }}>
+            <p style={{ 
+              color: 'var(--amber-glow)',
+              fontSize: '0.9rem',
+              marginBottom: 'var(--space-md)',
+              letterSpacing: '0.1em'
+            }}>
+              our philosophy
+            </p>
+            <h3 style={{ 
+              fontSize: '1.5rem',
+              fontWeight: 300,
+              color: 'var(--text-primary)',
+              marginBottom: 'var(--space-lg)',
+              lineHeight: 1.5
+            }}>
+              wellness is not about perfection.<br/>
+              its about <span style={{ fontStyle: 'italic', color: 'var(--sakura-pink)' }}>presence</span>.
+            </h3>
+            <div style={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-sm)',
+              alignItems: 'center',
+              color: 'var(--text-secondary)',
+              fontSize: '0.95rem'
+            }}>
+              <p>🌸 tailored to your unique health journey</p>
+              <p>🍃 grounded in mindfulness practices</p>
+              <p>🌙 designed for daily moments of peace</p>
+              <p>💫 your data stays private & secure</p>
+              <p>🎋 beautiful, minimal, calming</p>
+            </div>
+          </div>
+        </section>
 
         {/* CTA Section */}
-        <div className="container mx-auto px-4 py-20">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-12 text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Start Your Wellness Journey Today</h2>
-            <p className="text-xl mb-8 opacity-90">
-              Join thousands who have transformed their daily routine
+        <section style={{ 
+          padding: 'var(--space-2xl) var(--space-xl) var(--space-xl)',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <p style={{ 
+              fontSize: '1.3rem',
+              fontWeight: 200,
+              color: 'var(--text-primary)',
+              marginBottom: 'var(--space-lg)',
+              lineHeight: 1.6
+            }}>
+              ready to embrace a gentler,<br/>
+              more mindful way of being?
             </p>
+            
             <Link href="/register">
-              <Button size="lg" variant="secondary" className="px-8">
-                Get Started Free
-              </Button>
+              <button className="zen-button-playful" style={{
+                padding: 'var(--space-md) var(--space-xl)',
+                fontSize: '1.1rem',
+                marginBottom: 'var(--space-lg)'
+              }}>
+                start your journey →
+              </button>
             </Link>
+            
+            <p style={{ 
+              color: 'var(--text-muted)',
+              fontSize: '0.85rem'
+            }}>
+              no credit card required • free forever plan • cancel anytime
+            </p>
           </div>
-        </div>
+        </section>
+        
+        {/* Footer */}
+        <footer style={{ 
+          textAlign: 'center', 
+          padding: 'var(--space-lg)',
+          color: 'var(--text-muted)',
+          fontSize: '0.8rem',
+          borderTop: '1px solid var(--border)',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <p style={{ opacity: 0.5 }}>
+            made with mindfulness • {new Date().getFullYear()}
+          </p>
+        </footer>
       </div>
     );
   }

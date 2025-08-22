@@ -1,69 +1,59 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import SphereTimer from '@/components/SphereTimer';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Volume2, 
-  VolumeX,
-  ChevronLeft,
-  Brain,
-  Timer,
-  Coffee,
-  Zap,
-  Moon,
-  CheckCircle
-} from 'lucide-react';
 import Link from 'next/link';
+import '@/styles/zen-dark.css';
 
 const SESSION_TYPES = [
-  { id: 'pomodoro', label: 'Pomodoro', icon: Timer, duration: 25, description: 'Focus for 25 minutes' },
-  { id: 'short-break', label: 'Short Break', icon: Coffee, duration: 5, description: 'Quick 5-minute break' },
-  { id: 'long-break', label: 'Long Break', icon: Coffee, duration: 15, description: '15-minute rest' },
-  { id: 'meditation', label: 'Meditation', icon: Brain, duration: 10, description: 'Mindful breathing' },
-  { id: 'deep-work', label: 'Deep Work', icon: Zap, duration: 45, description: 'Extended focus session' },
-  { id: 'custom', label: 'Custom', icon: Timer, duration: 25, description: 'Set your own time' },
+  { id: 'focus', name: 'deep focus', duration: 25, emoji: '🎯' },
+  { id: 'short', name: 'quick', duration: 10, emoji: '⚡' },
+  { id: 'break', name: 'rest', duration: 5, emoji: '☕' },
+  { id: 'meditation', name: 'meditate', duration: 15, emoji: '🧘' },
+  { id: 'long', name: 'marathon', duration: 45, emoji: '🏔️' },
+  { id: 'custom', name: 'your time', duration: 20, emoji: '✨' },
 ];
 
 const AMBIENT_SOUNDS = [
-  { id: 'none', label: 'No Sound', icon: VolumeX },
-  { id: 'rain', label: 'Rain', icon: Volume2 },
-  { id: 'ocean', label: 'Ocean Waves', icon: Volume2 },
-  { id: 'forest', label: 'Forest', icon: Volume2 },
-  { id: 'white-noise', label: 'White Noise', icon: Volume2 },
-  { id: 'meditation', label: 'Meditation Music', icon: Volume2 },
+  { id: 'none', name: 'no sound', emoji: '🔇' },
+  { id: 'rain', name: 'rain', emoji: '🌧️', url: '/sounds/rain.mp3' },
+  { id: 'ocean', name: 'ocean waves', emoji: '🌊', url: '/sounds/ocean.mp3' },
+  { id: 'forest', name: 'forest', emoji: '🌲', url: '/sounds/forest.mp3' },
+  { id: 'white-noise', name: 'white noise', emoji: '📻', url: '/sounds/white-noise.mp3' },
+  { id: 'campfire', name: 'campfire', emoji: '🔥', url: '/sounds/campfire.mp3' },
 ];
 
-export default function FocusPage() {
+export default function ZenFocusPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   
   // Timer state
-  const [sessionType, setSessionType] = useState('pomodoro');
-  const [duration, setDuration] = useState(25); // in minutes
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // in seconds
+  const [selectedType, setSelectedType] = useState('focus');
+  const [duration, setDuration] = useState(25);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [completedSessions, setCompletedSessions] = useState(0);
-  
-  // Sound state
-  const [ambientSound, setAmbientSound] = useState('none');
-  const [isMuted, setIsMuted] = useState(false);
+  const [selectedSound, setSelectedSound] = useState('none');
+  const [soundVolume, setSoundVolume] = useState(0.5);
   
   // Refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const alarmRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize with user's default session length
+  // Zen quotes for breaks
+  const zenQuotes = [
+    "The mind is like water. When calm, everything becomes clear.",
+    "In the space between breaths, find your center.",
+    "Progress is not always forward. Sometimes it's inward.",
+    "Be like bamboo: flexible, yet unbreakable.",
+    "The journey of a thousand miles begins with a single breath.",
+  ];
+  const [currentQuote] = useState(zenQuotes[Math.floor(Math.random() * zenQuotes.length)]);
+
   useEffect(() => {
     if (user?.profile?.focusSessionLength) {
       setDuration(user.profile.focusSessionLength);
@@ -71,14 +61,12 @@ export default function FocusPage() {
     }
   }, [user]);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
 
-  // Timer logic
   useEffect(() => {
     if (isRunning && !isPaused && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
@@ -107,86 +95,157 @@ export default function FocusPage() {
     setIsRunning(false);
     setCompletedSessions((prev) => prev + 1);
     
-    // Play completion sound
-    playCompletionSound();
+    // Stop ambient sound
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
     
-    // Save session to database
+    // Play completion beep
+    playCompletionBeep();
+    
+    // Save session
     try {
       await fetch('/api/focus-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           duration: Math.ceil(duration),
-          type: sessionType,
-          ambientSound: ambientSound === 'none' ? null : ambientSound,
+          type: selectedType,
         }),
       });
       
-      toast.success('🎉 Session completed! Great work!', {
-        description: `You've completed a ${duration}-minute ${sessionType} session.`,
+      toast.success('✨ Beautiful work! You completed your session.', {
+        style: {
+          background: 'var(--surface)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border)',
+        },
       });
     } catch (error) {
       console.error('Failed to save session:', error);
     }
   };
-
-  const playCompletionSound = () => {
-    if (!isMuted) {
-      // Create a simple beep sound
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+  
+  const playCompletionBeep = () => {
+    // Create a simple beep using Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800; // Frequency in Hz
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    
+    // Play a second beep
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
       
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
+      osc2.frequency.value = 1000;
+      osc2.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-    }
+      osc2.start(audioContext.currentTime);
+      osc2.stop(audioContext.currentTime + 0.5);
+    }, 600);
   };
 
   const handleStart = () => {
     setIsRunning(true);
     setIsPaused(false);
+    
+    // Start ambient sound if selected
+    if (selectedSound !== 'none') {
+      const sound = AMBIENT_SOUNDS.find(s => s.id === selectedSound);
+      if (sound?.url) {
+        // Note: You'll need to add the actual sound files
+        // For now, we're just setting up the structure
+        if (!audioRef.current) {
+          audioRef.current = new Audio(sound.url);
+          audioRef.current.loop = true;
+          audioRef.current.volume = soundVolume;
+        }
+        audioRef.current.play().catch(e => {
+          console.log('Audio playback failed:', e);
+          // Handle browser autoplay restrictions
+        });
+      }
+    }
   };
 
   const handlePause = () => {
     setIsPaused(!isPaused);
+    
+    // Pause/resume ambient sound
+    if (audioRef.current) {
+      if (isPaused) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    }
   };
 
   const handleReset = () => {
     setIsRunning(false);
     setIsPaused(false);
     setTimeLeft(duration * 60);
+    
+    // Stop ambient sound
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
-
-  const handleSessionTypeChange = (type: string) => {
-    const session = SESSION_TYPES.find((s) => s.id === type);
-    if (session) {
-      setSessionType(type);
-      if (type !== 'custom') {
-        setDuration(session.duration);
-        setTimeLeft(session.duration * 60);
+  
+  const handleSoundChange = (soundId: string) => {
+    // Stop current sound
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    setSelectedSound(soundId);
+    
+    // If timer is running, start the new sound
+    if (isRunning && !isPaused && soundId !== 'none') {
+      const sound = AMBIENT_SOUNDS.find(s => s.id === soundId);
+      if (sound?.url) {
+        audioRef.current = new Audio(sound.url);
+        audioRef.current.loop = true;
+        audioRef.current.volume = soundVolume;
+        audioRef.current.play().catch(e => console.log('Audio playback failed:', e));
       }
-      setIsRunning(false);
-      setIsPaused(false);
+    }
+  };
+  
+  const handleVolumeChange = (newVolume: number) => {
+    setSoundVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
     }
   };
 
-  const handleDurationChange = (newDuration: string) => {
-    const minutes = parseInt(newDuration);
-    if (!isNaN(minutes) && minutes > 0 && minutes <= 180) {
-      setDuration(minutes);
-      setTimeLeft(minutes * 60);
+  const handleTypeChange = (typeId: string) => {
+    const type = SESSION_TYPES.find((t) => t.id === typeId);
+    if (type) {
+      setSelectedType(typeId);
+      setDuration(type.duration);
+      setTimeLeft(type.duration * 60);
       setIsRunning(false);
       setIsPaused(false);
     }
@@ -202,9 +261,15 @@ export default function FocusPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">
-          <Brain className="h-12 w-12 text-purple-500" />
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: 'var(--background)'
+      }}>
+        <div className="floating">
+          <div className="zen-circle imperfect" style={{ position: 'relative', width: '60px', height: '60px', opacity: 0.3 }}></div>
         </div>
       </div>
     );
@@ -212,183 +277,329 @@ export default function FocusPage() {
 
   if (!user) return null;
 
-  const currentSession = SESSION_TYPES.find((s) => s.id === sessionType);
-  const Icon = currentSession?.icon || Timer;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-indigo-500" />
-              <h1 className="text-xl font-bold">Focus Session</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              {completedSessions} completed today
-            </Badge>
-          </div>
+    <div style={{ minHeight: '100vh', background: 'var(--background)', position: 'relative' }}>
+      {/* Decorative elements */}
+      <div className="zen-circle" style={{ top: '15%', right: '8%', width: '120px', height: '120px' }}></div>
+      <div className="zen-circle imperfect" style={{ bottom: '10%', left: '5%', width: '80px', height: '80px' }}></div>
+      
+      {/* Navigation */}
+      <nav style={{ 
+        padding: 'var(--space-lg) var(--space-xl)', 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <Link href="/dashboard">
+          <button className="zen-button">← back</button>
+        </Link>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            sessions today:
+          </span>
+          <span style={{ color: 'var(--sakura-pink)', fontWeight: 500 }}>
+            {completedSessions}
+          </span>
         </div>
-      </header>
+      </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Timer Card */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-6 w-6 text-indigo-500" />
-                  <CardTitle>{currentSession?.label} Session</CardTitle>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMuted(!isMuted)}
-                >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-              </div>
-              <CardDescription>{currentSession?.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 3D Sphere Timer Display */}
-              <SphereTimer 
-                progress={progress}
-                timeLeft={formatTime(timeLeft)}
-                isRunning={isRunning}
-                isPaused={isPaused}
+      <main className="zen-container" style={{ marginTop: 'var(--space-xl)', maxWidth: '900px' }}>
+        {/* Timer Display */}
+        <section style={{ textAlign: 'center', marginBottom: 'var(--space-2xl)' }}>
+          <div className="zen-card zen-card-organic gentle-glow" style={{ 
+            maxWidth: '400px', 
+            margin: '0 auto',
+            padding: 'var(--space-2xl)',
+            position: 'relative'
+          }}>
+            {/* Progress Ring */}
+            <svg style={{ 
+              position: 'absolute', 
+              top: '50%', 
+              left: '50%', 
+              transform: 'translate(-50%, -50%)',
+              width: '100%',
+              height: '100%',
+              opacity: 0.3
+            }} viewBox="0 0 200 200">
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="2"
               />
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                fill="none"
+                stroke="var(--sakura-pink)"
+                strokeWidth="2"
+                strokeDasharray={`${2 * Math.PI * 90}`}
+                strokeDashoffset={`${2 * Math.PI * 90 * (1 - progress / 100)}`}
+                transform="rotate(-90 100 100)"
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            
+            {/* Time Display */}
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <h1 style={{ 
+                fontSize: 'clamp(3rem, 8vw, 5rem)', 
+                fontWeight: 200,
+                color: 'var(--text-primary)',
+                letterSpacing: '0.05em',
+                marginBottom: 'var(--space-sm)'
+              }}>
+                {formatTime(timeLeft)}
+              </h1>
+              
+              <p style={{ 
+                color: 'var(--text-muted)', 
+                fontSize: '0.9rem',
+                fontStyle: 'italic'
+              }}>
+                {isRunning && !isPaused && "focusing..."}
+                {isRunning && isPaused && "paused"}
+                {!isRunning && timeLeft === duration * 60 && "ready when you are"}
+                {!isRunning && timeLeft < duration * 60 && timeLeft > 0 && "almost there"}
+                {timeLeft === 0 && "complete ✨"}
+              </p>
+            </div>
+          </div>
 
-              {/* Control Buttons */}
-              <div className="flex justify-center gap-4">
-                {!isRunning ? (
-                  <Button size="lg" onClick={handleStart} className="px-8">
-                    <Play className="h-5 w-5 mr-2" />
-                    Start
-                  </Button>
-                ) : (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePause}
-                    variant={isPaused ? "default" : "secondary"}
-                    className="px-8"
+          {/* Controls */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 'var(--space-md)', 
+            justifyContent: 'center',
+            marginTop: 'var(--space-lg)'
+          }}>
+            {!isRunning ? (
+              <button className="zen-button" onClick={handleStart} style={{ minWidth: '120px' }}>
+                begin
+              </button>
+            ) : (
+              <button className="zen-button" onClick={handlePause} style={{ minWidth: '120px' }}>
+                {isPaused ? 'resume' : 'pause'}
+              </button>
+            )}
+            <button className="zen-button" onClick={handleReset}>
+              reset
+            </button>
+          </div>
+        </section>
+
+        {/* Session Types */}
+        <section style={{ marginBottom: 'var(--space-2xl)' }}>
+          <p style={{ 
+            textAlign: 'center',
+            color: 'var(--text-muted)', 
+            fontSize: '0.9rem',
+            marginBottom: 'var(--space-lg)'
+          }}>
+            choose your rhythm
+          </p>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: 'var(--space-sm)',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
+            {SESSION_TYPES.map((type) => {
+              const isActive = selectedType === type.id;
+              return (
+                <button
+                  key={type.id}
+                  onClick={() => handleTypeChange(type.id)}
+                  className={isActive ? "zen-card hand-drawn-border" : "zen-card"}
+                  style={{
+                    padding: 'var(--space-md)',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: isActive ? 'var(--surface-raised)' : 'var(--surface)',
+                    border: isActive ? '1px solid var(--sakura-pink)' : '1px solid var(--border)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-xs)' }}>
+                    {type.emoji}
+                  </div>
+                  <p style={{ 
+                    color: isActive ? 'var(--sakura-pink)' : 'var(--text-primary)',
+                    fontSize: '0.9rem',
+                    marginBottom: '4px'
+                  }}>
+                    {type.name}
+                  </p>
+                  <p style={{ 
+                    color: 'var(--text-muted)', 
+                    fontSize: '0.8rem' 
+                  }}>
+                    {type.duration} min
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Custom Duration for custom type */}
+        {selectedType === 'custom' && (
+          <section style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
+            <input
+              type="range"
+              min="5"
+              max="90"
+              value={duration}
+              onChange={(e) => {
+                const newDuration = parseInt(e.target.value);
+                setDuration(newDuration);
+                setTimeLeft(newDuration * 60);
+              }}
+              style={{
+                width: '200px',
+                accentColor: 'var(--sakura-pink)',
+              }}
+            />
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 'var(--space-xs)' }}>
+              {duration} minutes
+            </p>
+          </section>
+        )}
+
+        {/* Zen Quote */}
+        <section className="zen-card" style={{ 
+          maxWidth: '500px', 
+          margin: '0 auto',
+          textAlign: 'center',
+          marginTop: 'var(--space-2xl)'
+        }}>
+          <p style={{ 
+            color: 'var(--text-secondary)',
+            fontSize: '0.95rem',
+            lineHeight: 1.6,
+            fontStyle: 'italic'
+          }}>
+            "{currentQuote}"
+          </p>
+        </section>
+
+        {/* Sound Settings */}
+        <section style={{ marginTop: 'var(--space-2xl)' }}>
+          <div className="zen-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <p style={{ 
+              textAlign: 'center',
+              color: 'var(--text-muted)', 
+              fontSize: '0.9rem',
+              marginBottom: 'var(--space-lg)'
+            }}>
+              ambient sounds
+            </p>
+            
+            {/* Sound Options */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+              gap: 'var(--space-sm)',
+              marginBottom: 'var(--space-lg)'
+            }}>
+              {AMBIENT_SOUNDS.map((sound) => {
+                const isActive = selectedSound === sound.id;
+                return (
+                  <button
+                    key={sound.id}
+                    onClick={() => handleSoundChange(sound.id)}
+                    style={{
+                      padding: 'var(--space-sm)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      background: isActive ? 'var(--surface-raised)' : 'transparent',
+                      border: isActive ? '1px solid var(--ocean-blue)' : '1px solid var(--border)',
+                      borderRadius: 'var(--radius-md)',
+                      transition: 'all 0.3s ease',
+                      color: isActive ? 'var(--ocean-blue)' : 'var(--text-muted)'
+                    }}
                   >
-                    {isPaused ? (
-                      <>
-                        <Play className="h-5 w-5 mr-2" />
-                        Resume
-                      </>
-                    ) : (
-                      <>
-                        <Pause className="h-5 w-5 mr-2" />
-                        Pause
-                      </>
-                    )}
-                  </Button>
-                )}
-                <Button size="lg" variant="outline" onClick={handleReset}>
-                  <RotateCcw className="h-5 w-5 mr-2" />
-                  Reset
-                </Button>
+                    <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+                      {sound.emoji}
+                    </div>
+                    <p style={{ fontSize: '0.75rem' }}>
+                      {sound.name}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Volume Control */}
+            {selectedSound !== 'none' && (
+              <div style={{ textAlign: 'center' }}>
+                <label style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 'var(--space-sm)',
+                  justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.85rem'
+                }}>
+                  <span>🔊</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={soundVolume}
+                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                    style={{
+                      width: '150px',
+                      accentColor: 'var(--ocean-blue)',
+                    }}
+                  />
+                  <span>{Math.round(soundVolume * 100)}%</span>
+                </label>
               </div>
-
-              {/* Session Type Selector */}
-              <div className="grid grid-cols-3 gap-2">
-                {SESSION_TYPES.map((type) => (
-                  <Button
-                    key={type.id}
-                    variant={sessionType === type.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleSessionTypeChange(type.id)}
-                    className="flex flex-col h-auto py-2"
-                  >
-                    <type.icon className="h-4 w-4 mb-1" />
-                    <span className="text-xs">{type.label}</span>
-                    <span className="text-xs opacity-60">{type.duration}m</span>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Settings Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Custom Duration */}
-              {sessionType === 'custom' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Duration (minutes)</label>
-                  <Select value={duration.toString()} onValueChange={handleDurationChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[5, 10, 15, 20, 25, 30, 45, 60, 90, 120].map((min) => (
-                        <SelectItem key={min} value={min.toString()}>
-                          {min} minutes
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Ambient Sound */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Ambient Sound</label>
-                <Select value={ambientSound} onValueChange={setAmbientSound}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AMBIENT_SOUNDS.map((sound) => (
-                      <SelectItem key={sound.id} value={sound.id}>
-                        <div className="flex items-center gap-2">
-                          <sound.icon className="h-4 w-4" />
-                          <span>{sound.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Tips */}
-              <div className="space-y-2 pt-4 border-t">
-                <h4 className="text-sm font-medium">Focus Tips</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Eliminate distractions</li>
-                  <li>• Keep water nearby</li>
-                  <li>• Take breaks between sessions</li>
-                  <li>• Maintain good posture</li>
-                </ul>
-              </div>
-
-              {/* Quick Affirmation */}
-              <div className="pt-4 border-t">
-                <p className="text-sm italic text-center text-muted-foreground">
-                  "Focus on progress, not perfection."
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            )}
+            
+            {/* Instructions */}
+            <div style={{ 
+              marginTop: 'var(--space-lg)',
+              padding: 'var(--space-md)',
+              background: 'var(--surface)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--border-subtle)'
+            }}>
+              <p style={{ 
+                color: 'var(--text-muted)', 
+                fontSize: '0.8rem',
+                textAlign: 'center',
+                lineHeight: 1.5
+              }}>
+                <strong style={{ color: 'var(--amber-glow)' }}>How to add sounds:</strong><br/>
+                Create a <code style={{ 
+                  background: 'var(--surface-raised)', 
+                  padding: '2px 6px', 
+                  borderRadius: '4px',
+                  fontSize: '0.75rem'
+                }}>public/sounds</code> folder and add these files:<br/>
+                <span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>
+                  rain.mp3, ocean.mp3, forest.mp3, white-noise.mp3, campfire.mp3
+                </span><br/>
+                <span style={{ opacity: 0.7 }}>
+                  You can download free ambient sounds from freesound.org or zapsplat.com
+                </span>
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -1,13 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Heart, CheckCircle2 } from 'lucide-react';
+import '@/styles/zen-dark.css';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -16,7 +12,20 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [zenMoment, setZenMoment] = useState('');
   const { register } = useAuth();
+  
+  const zenMoments = [
+    "begin with a single breath",
+    "your wellness journey starts now",
+    "plant the seeds of mindfulness",
+    "create your peaceful sanctuary",
+    "welcome to a gentler way of being",
+  ];
+  
+  useEffect(() => {
+    setZenMoment(zenMoments[Math.floor(Math.random() * zenMoments.length)]);
+  }, []);
 
   const validatePassword = (pass: string) => {
     const errors = [];
@@ -64,114 +73,307 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-blue-600 rounded-full">
-              <Heart className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl text-center">Create your account</CardTitle>
-          <CardDescription className="text-center">
-            Start your personalized wellness journey today
-          </CardDescription>
-        </CardHeader>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'var(--background)', 
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      padding: 'var(--space-lg)',
+      overflowY: 'auto'
+    }}>
+      {/* Decorative circles */}
+      <div className="zen-circle" style={{ top: '5%', right: '8%', width: '120px', height: '120px', opacity: 0.05 }}></div>
+      <div className="zen-circle imperfect" style={{ bottom: '10%', left: '5%', width: '180px', height: '180px', opacity: 0.03 }}></div>
+      
+      <div className="zen-card zen-card-organic" style={{ 
+        width: '100%',
+        maxWidth: '480px',
+        padding: 'var(--space-xl)',
+        textAlign: 'center',
+        margin: 'var(--space-lg) 0'
+      }}>
+        {/* Logo */}
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <h1 className="zen-heading-playful" style={{ 
+            fontSize: '2.5rem',
+            marginBottom: 'var(--space-xs)'
+          }}>
+            zenn
+          </h1>
+        </Link>
+        
+        <p style={{ 
+          color: 'var(--text-muted)',
+          fontSize: '0.9rem',
+          marginBottom: 'var(--space-lg)',
+          fontStyle: 'italic'
+        }}>
+          "{zenMoment}"
+        </p>
+        
+        <h2 style={{ 
+          color: 'var(--text-primary)',
+          fontSize: '1.5rem',
+          fontWeight: 300,
+          marginBottom: 'var(--space-xl)'
+        }}>
+          create your sanctuary
+        </h2>
+        
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (passwordError) validatePassword(e.target.value);
-                }}
-                required
-                disabled={isLoading}
-              />
-              {password && (
-                <div className="space-y-1 mt-2">
-                  {passwordRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs">
-                      <CheckCircle2 
-                        className={`h-3 w-3 ${req.met ? 'text-green-500' : 'text-gray-300'}`} 
-                      />
-                      <span className={req.met ? 'text-green-700' : 'text-gray-500'}>
-                        {req.text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            {passwordError && (
-              <p className="text-sm text-red-500">{passwordError}</p>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
-              className="w-full"
+          <div style={{ marginBottom: 'var(--space-lg)', textAlign: 'left' }}>
+            <label style={{ 
+              display: 'block',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              marginBottom: 'var(--space-xs)',
+              letterSpacing: '0.05em'
+            }}>
+              your name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
               disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                'Create account'
-              )}
-            </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
+              placeholder="how shall we address you?"
+              style={{
+                width: '100%',
+                padding: 'var(--space-sm)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--moss-green)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(122, 154, 126, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 'var(--space-lg)', textAlign: 'left' }}>
+            <label style={{ 
+              display: 'block',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              marginBottom: 'var(--space-xs)',
+              letterSpacing: '0.05em'
+            }}>
+              email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="you@example.com"
+              style={{
+                width: '100%',
+                padding: 'var(--space-sm)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--moss-green)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(122, 154, 126, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 'var(--space-md)', textAlign: 'left' }}>
+            <label style={{ 
+              display: 'block',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              marginBottom: 'var(--space-xs)',
+              letterSpacing: '0.05em'
+            }}>
+              password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) validatePassword(e.target.value);
+              }}
+              required
+              disabled={isLoading}
+              placeholder="choose wisely"
+              style={{
+                width: '100%',
+                padding: 'var(--space-sm)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--moss-green)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(122, 154, 126, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+            {password && (
+              <div style={{ 
+                marginTop: 'var(--space-sm)',
+                padding: 'var(--space-sm)',
+                background: 'var(--surface)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.75rem'
+              }}>
+                {passwordRequirements.map((req, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 'var(--space-xs)',
+                    marginBottom: index < passwordRequirements.length - 1 ? '4px' : 0
+                  }}>
+                    <span style={{ 
+                      color: req.met ? 'var(--moss-green)' : 'var(--text-muted)',
+                      fontSize: '0.9rem'
+                    }}>
+                      {req.met ? '✓' : '○'}
+                    </span>
+                    <span style={{ 
+                      color: req.met ? 'var(--text-secondary)' : 'var(--text-muted)' 
+                    }}>
+                      {req.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div style={{ marginBottom: 'var(--space-lg)', textAlign: 'left' }}>
+            <label style={{ 
+              display: 'block',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              marginBottom: 'var(--space-xs)',
+              letterSpacing: '0.05em'
+            }}>
+              confirm password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="once more for clarity"
+              style={{
+                width: '100%',
+                padding: 'var(--space-sm)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--moss-green)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(122, 154, 126, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          </div>
+          
+          {passwordError && (
+            <p style={{ 
+              color: 'var(--amber-glow)',
+              fontSize: '0.85rem',
+              marginBottom: 'var(--space-lg)',
+              textAlign: 'left'
+            }}>
+              ⚠ {passwordError}
+            </p>
+          )}
+          
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="zen-button-playful"
+            style={{
+              width: '100%',
+              padding: 'var(--space-md)',
+              fontSize: '1rem',
+              marginBottom: 'var(--space-lg)',
+              background: 'var(--moss-green)',
+              opacity: isLoading ? 0.7 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isLoading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)' }}>
+                <span className="floating" style={{ display: 'inline-block' }}>◌</span>
+                creating your sanctuary...
+              </span>
+            ) : (
+              'begin your journey'
+            )}
+          </button>
+          
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            justifyContent: 'center',
+            marginBottom: 'var(--space-md)'
+          }}>
+            <span style={{ height: '1px', flex: 1, background: 'var(--border)' }}></span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>or</span>
+            <span style={{ height: '1px', flex: 1, background: 'var(--border)' }}></span>
+          </div>
+          
+          <p style={{ 
+            color: 'var(--text-secondary)',
+            fontSize: '0.9rem'
+          }}>
+            already on this path?{' '}
+            <Link href="/login" style={{ 
+              color: 'var(--ocean-blue)',
+              textDecoration: 'none',
+              borderBottom: '1px dotted var(--ocean-blue)'
+            }}>
+              welcome back
+            </Link>
+          </p>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

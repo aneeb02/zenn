@@ -23,9 +23,12 @@ export async function POST(request: NextRequest) {
     
     const { email, password } = validationResult.data;
 
-    // Find user
+    // Find user with profile
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
+      include: {
+        profile: true,
+      },
     });
 
     if (!user) {
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
+        profile: user.profile,
       },
     });
 
