@@ -20,9 +20,7 @@ export const registerSchema = z.object({
 export const profileSchema = z.object({
   goals: z.array(z.string()).min(1, 'At least one goal is required').max(10),
   healthConditions: z.array(z.string()).max(10),
-  tone: z.enum(['gentle', 'encouraging', 'motivational'], {
-    errorMap: () => ({ message: 'Invalid tone selection' })
-  }),
+  tone: z.enum(['gentle', 'encouraging', 'motivational']),
   notificationTimes: z.array(z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format')),
   focusSessionLength: z.number().min(5).max(120),
 });
