@@ -2,18 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/db/prisma';
+import { loginSchema } from '@/lib/validations/api';
+import { serverEnv } from '@/lib/config/env.server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
-
-    // Validate input
-    if (!email || !password) {
+    const body = await request.json();
+    
+    // Validate input with Zod
+    const validationResult = loginSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { 
+          error: 'Validation failed',
+          details: validationResult.error.flatten() 
+        },
         { status: 400 }
       );
     }
+    
+    const { email, password } = validationResult.data;
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -40,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.NEXTAUTH_SECRET!,
+      serverEnv.NEXTAUTH_SECRET,
       { expiresIn: '7d' }
     );
 

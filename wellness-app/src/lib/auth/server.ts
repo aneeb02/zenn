@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/db/prisma';
+import { serverEnv } from '@/lib/config/env.server';
 
 export async function getServerSession(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function getServerSession(request: NextRequest) {
       return null;
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as {
+    const decoded = jwt.verify(token, serverEnv.NEXTAUTH_SECRET) as {
       userId: string;
     };
 

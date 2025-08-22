@@ -2,25 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/db/prisma';
+import { registerSchema } from '@/lib/validations/api';
+import { serverEnv } from '@/lib/config/env.server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
-
-    // Validate input
-    if (!email || !password || !name) {
+    const body = await request.json();
+    
+    // Validate input with Zod
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Email, password, and name are required' },
+        { 
+          error: 'Validation failed',
+          details: validationResult.error.flatten() 
+        },
         { status: 400 }
       );
     }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
+    
+    const { email, password, name } = validationResult.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.NEXTAUTH_SECRET!,
+      serverEnv.NEXTAUTH_SECRET,
       { expiresIn: '7d' }
     );
 

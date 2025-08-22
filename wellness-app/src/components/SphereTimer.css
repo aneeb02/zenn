@@ -1,0 +1,258 @@
+.sphere-timer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  position: relative;
+}
+
+.sphere-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  perspective: 1000px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sphere {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 
+    0 20px 60px rgba(102, 126, 234, 0.4),
+    0 0 100px rgba(102, 126, 234, 0.2),
+    inset 0 0 60px rgba(255, 255, 255, 0.1);
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  animation: float 6s ease-in-out infinite;
+}
+
+.sphere.animating {
+  animation: float 6s ease-in-out infinite, rotate 20s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotateX(5deg) rotateY(5deg);
+  }
+  50% {
+    transform: translateY(-20px) rotateX(5deg) rotateY(5deg);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.sphere-gradient {
+  position: absolute;
+  top: -5%;
+  left: -5%;
+  right: -5%;
+  bottom: -5%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(129, 140, 248, 0) 0deg,
+    rgba(192, 132, 252, 0.5) 90deg,
+    rgba(232, 121, 249, 0.5) 180deg,
+    rgba(129, 140, 248, 0.5) 270deg,
+    rgba(129, 140, 248, 0) 360deg
+  );
+  animation: spin 8s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sphere-progress {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotateX(0deg);
+}
+
+.progress-circle {
+  transition: stroke-dashoffset 0.5s ease;
+  filter: drop-shadow(0 0 20px rgba(192, 132, 252, 0.9));
+}
+
+.progress-circle-bg {
+  opacity: 0.2;
+}
+
+.sphere-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.time-display {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.5),
+    0 0 40px rgba(255, 255, 255, 0.3);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  letter-spacing: 0.05em;
+}
+
+.sphere-glow {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 30%;
+  height: 30%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(15px);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+}
+
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particle-float 8s infinite;
+}
+
+.particle-1 {
+  top: 10%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.particle-2 {
+  top: 20%;
+  right: 20%;
+  animation-delay: 1.3s;
+}
+
+.particle-3 {
+  bottom: 30%;
+  left: 15%;
+  animation-delay: 2.6s;
+}
+
+.particle-4 {
+  bottom: 20%;
+  right: 25%;
+  animation-delay: 3.9s;
+}
+
+.particle-5 {
+  top: 40%;
+  left: 10%;
+  animation-delay: 5.2s;
+}
+
+.particle-6 {
+  top: 30%;
+  right: 10%;
+  animation-delay: 6.5s;
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-100px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0);
+  }
+}
+
+.sphere-reflection {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(10px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .sphere-wrapper {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .time-display {
+    font-size: 2.5rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .sphere {
+    background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%);
+    box-shadow: 
+      0 20px 60px rgba(139, 92, 246, 0.4),
+      0 0 100px rgba(139, 92, 246, 0.2),
+      inset 0 0 60px rgba(255, 255, 255, 0.05);
+  }
+}
