@@ -23,6 +23,8 @@ const HEALTH_CONDITIONS = [
   'Insomnia',
   'Chronic stress',
   'None',
+  'PCOS',
+  'PMS',
 ];
 
 const TONES = [

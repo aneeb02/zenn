@@ -12,13 +12,15 @@ import {
   Heart,
   LogOut,
   Menu,
-  X
+  X,
+  BookOpen
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Journal', href: '/journal', icon: BookOpen },
   { name: 'Focus', href: '/focus', icon: Clock },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
   { name: 'Wellness', href: '/wellness', icon: Heart },

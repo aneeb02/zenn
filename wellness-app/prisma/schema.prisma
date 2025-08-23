@@ -26,6 +26,7 @@ model User {
   affirmations   Affirmation[]
   sessions       FocusSession[]
   stats          DailyStats[]
+  journalEntries JournalEntry[]
 }
 
 model Profile {
@@ -86,4 +87,41 @@ model DailyStats {
   
   @@unique([userId, date])
   @@index([userId, date])
+}
+
+model JournalEntry {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  content       String   @db.Text // Encrypted content
+  contentIv     String   // Initialization vector for encryption
+  mood          String?  // happy, calm, anxious, sad, energetic, etc.
+  tags          String[] // wellness, goals, reflection, gratitude, etc.
+  isPrivate     Boolean  @default(true)
+  wordCount     Int      @default(0)
+  readingTime   Int      @default(0) // in minutes
+  lastViewedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reflections   JournalReflection[]
+  
+  @@index([userId, createdAt])
+  @@index([userId, mood])
+  @@index([userId, tags])
+}
+
+model JournalReflection {
+  id            String   @id @default(cuid())
+  journalId     String
+  userId        String
+  content       String   @db.Text
+  reflectionType String  // progress, insight, gratitude, lesson
+  createdAt     DateTime @default(now())
+  
+  journal       JournalEntry @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  
+  @@index([journalId])
+  @@index([userId, createdAt])
 }

@@ -51,6 +51,45 @@ export const dateRangeSchema = z.object({
   endDate: z.string().datetime().optional(),
 });
 
+// Journal entry schemas
+export const createJournalEntrySchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  content: z.string().min(1, 'Content is required').max(50000, 'Content must be less than 50000 characters'),
+  mood: z.enum(['happy', 'calm', 'anxious', 'sad', 'energetic', 'grateful', 'frustrated', 'hopeful', 'neutral']).optional(),
+  tags: z.array(z.string()).max(10, 'Maximum 10 tags allowed').optional().default([]),
+  isPrivate: z.boolean().optional().default(true),
+});
+
+export const updateJournalEntrySchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).max(50000).optional(),
+  mood: z.enum(['happy', 'calm', 'anxious', 'sad', 'energetic', 'grateful', 'frustrated', 'hopeful', 'neutral']).optional(),
+  tags: z.array(z.string()).max(10).optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+export const journalQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  mood: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  search: z.string().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'wordCount']).optional().default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+export const createReflectionSchema = z.object({
+  journalId: z.string().min(1, 'Journal ID is required'),
+  content: z.string().min(1, 'Content is required').max(5000, 'Reflection must be less than 5000 characters'),
+  reflectionType: z.enum(['progress', 'insight', 'gratitude', 'lesson']),
+});
+
+export const journalStatsSchema = z.object({
+  period: z.enum(['week', 'month', 'year', 'all']).optional().default('month'),
+});
+
 // Type exports for use in components
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -59,3 +98,8 @@ export type CustomAffirmationInput = z.infer<typeof customAffirmationSchema>;
 export type FocusSessionInput = z.infer<typeof focusSessionSchema>;
 export type PaginationParams = z.infer<typeof paginationSchema>;
 export type DateRangeParams = z.infer<typeof dateRangeSchema>;
+export type CreateJournalEntryInput = z.infer<typeof createJournalEntrySchema>;
+export type UpdateJournalEntryInput = z.infer<typeof updateJournalEntrySchema>;
+export type JournalQueryParams = z.infer<typeof journalQuerySchema>;
+export type CreateReflectionInput = z.infer<typeof createReflectionSchema>;
+export type JournalStatsParams = z.infer<typeof journalStatsSchema>;

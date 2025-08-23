@@ -180,6 +180,9 @@ export default function ZenDashboard() {
           <Link href="/settings">
             <button className="zen-button">settings</button>
           </Link>
+          <Link href="/journal">
+            <button className="zen-button">journal</button>
+          </Link>
           <button className="zen-button" onClick={logout}>logout</button>
         </div>
       </nav>
@@ -404,18 +407,13 @@ export default function ZenDashboard() {
                 meditate
               </button>
             </Link>
-            <Link href="/wellness">
+            <Link href="/journal">
               <button className="zen-button-playful">
                 <span style={{ marginRight: 'var(--space-xs)' }}>💭</span>
                 reflect
               </button>
             </Link>
-            <Link href="/progress">
-              <button className="zen-button-playful">
-                <span style={{ marginRight: 'var(--space-xs)' }}>📈</span>
-                progress
-              </button>
-            </Link>
+            
           </div>
         </section>
       </main>
