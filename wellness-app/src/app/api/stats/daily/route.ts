@@ -51,6 +51,8 @@ export async function GET(request: NextRequest) {
     // Get last 12 weeks of stats for the dashboard activity map
     const activityStartDate = new Date(today);
     activityStartDate.setDate(activityStartDate.getDate() - (ACTIVITY_MAP_DAYS - 1));
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const activityStats = await prisma.dailyStats.findMany({
       where: {
@@ -65,9 +67,28 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const focusSessions = await prisma.focusSession.findMany({
+      where: {
+        userId: user.id,
+        createdAt: {
+          gte: activityStartDate,
+          lt: tomorrow,
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+
     const statsByDate = new Map(
       activityStats.map((stat) => [toDateKey(stat.date), stat])
     );
+
+    const focusSessionsByDate = new Map<string, number>();
+    for (const session of focusSessions) {
+      const dateKey = toDateKey(session.createdAt);
+      focusSessionsByDate.set(dateKey, (focusSessionsByDate.get(dateKey) || 0) + 1);
+    }
 
     const activityMap = Array.from({ length: ACTIVITY_MAP_DAYS }, (_, index) => {
       const date = new Date(activityStartDate);
@@ -83,6 +104,7 @@ export async function GET(request: NextRequest) {
         date: dateKey,
         affirmationsViewed,
         sessionMinutes,
+        focusSessionsCount: focusSessionsByDate.get(dateKey) || 0,
         journalEntriesCount,
         intensity: getIntensity({
           affirmationsViewed,

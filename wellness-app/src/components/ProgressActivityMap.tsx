@@ -4,6 +4,7 @@ export interface ActivityMapDay {
   date: string;
   affirmationsViewed: number;
   sessionMinutes: number;
+  focusSessionsCount: number;
   journalEntriesCount: number;
   intensity: 0 | 1 | 2 | 3 | 4;
   completedFocusAndJournal: boolean;
@@ -35,8 +36,11 @@ function formatTooltip(day: ActivityMapDay) {
     month: 'short',
     day: 'numeric',
   });
+  const sessionLabel = day.focusSessionsCount === 1 ? 'session' : 'sessions';
+  const journalLabel = day.journalEntriesCount === 1 ? 'journal entry' : 'journal entries';
+  const affirmationLabel = day.affirmationsViewed === 1 ? 'affirmation' : 'affirmations';
 
-  return `${label}: ${day.sessionMinutes} min focus, ${day.journalEntriesCount} journal, ${day.affirmationsViewed} affirmations`;
+  return `${label}: ${day.focusSessionsCount} ${sessionLabel}, ${day.sessionMinutes} focus min, ${day.journalEntriesCount} ${journalLabel}, ${day.affirmationsViewed} ${affirmationLabel}`;
 }
 
 export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
