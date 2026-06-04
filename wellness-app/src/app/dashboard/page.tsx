@@ -7,11 +7,13 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import '@/styles/zen-dark.css';
 import quotesData from '@/data/quotes.json';
+import { ProgressActivityMap, type ActivityMapDay } from '@/components/ProgressActivityMap';
 
 interface DailyStats {
   today: {
     affirmationsViewed: number;
     sessionMinutes: number;
+    journalEntriesCount: number;
     streakCount: number;
   };
   currentStreak: number;
@@ -19,7 +21,9 @@ interface DailyStats {
     date: string;
     affirmationsViewed: number;
     sessionMinutes: number;
+    journalEntriesCount: number;
   }>;
+  activityMap: ActivityMapDay[];
 }
 
 interface Quote {
@@ -112,9 +116,10 @@ export default function ZenDashboard() {
       }
     } catch (error) {
       setStats({
-        today: { affirmationsViewed: 0, sessionMinutes: 0, streakCount: 0 },
+        today: { affirmationsViewed: 0, sessionMinutes: 0, journalEntriesCount: 0, streakCount: 0 },
         currentStreak: 0,
         week: [],
+        activityMap: [],
       });
     }
   };
@@ -332,7 +337,7 @@ export default function ZenDashboard() {
                   wellness level
                 </p>
                 <p style={{ fontSize: '2.5rem', fontWeight: 200, color: 'var(--moss-green)' }}>
-                  {Math.min(100, (stats?.currentStreak || 0) * 10 + (stats?.today.sessionMinutes || 0))}
+                  {Math.min(100, (stats?.currentStreak || 0) * 10 + (stats?.today.sessionMinutes || 0) + (stats?.today.journalEntriesCount || 0) * 8)}
                 </p>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                   energy
@@ -349,46 +354,43 @@ export default function ZenDashboard() {
           </div>
         </section>
 
-        {/* Weekly Progress - Visual and Minimal */}
+        {/* Progress Map - Real activity over the last 12 weeks */}
         <section className="zen-card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <h3 style={{ 
-            fontSize: '0.9rem', 
-            color: 'var(--text-muted)',
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 'var(--space-md)',
+            alignItems: 'flex-start',
             marginBottom: 'var(--space-lg)',
-            letterSpacing: '0.05em'
+            flexWrap: 'wrap',
           }}>
-            this week's rhythm
-          </h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '100px' }}>
-            {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day, index) => {
-              const height = Math.random() * 70 + 20; // Random heights for demo
-              const isToday = index === new Date().getDay() - 1;
-              return (
-                <div key={day} style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center',
-                  gap: 'var(--space-xs)',
-                  flex: 1
-                }}>
-                  <div style={{
-                    width: '4px',
-                    height: `${height}%`,
-                    background: isToday ? 'var(--sakura-pink)' : 'var(--medium-gray)',
-                    borderRadius: 'var(--radius-full)',
-                    transition: 'all 0.3s ease',
-                    opacity: isToday ? 1 : 0.5
-                  }}></div>
-                  <span style={{ 
-                    fontSize: '0.7rem', 
-                    color: isToday ? 'var(--sakura-pink)' : 'var(--text-muted)'
-                  }}>
-                    {day}
-                  </span>
-                </div>
-              );
-            })}
+            <div>
+              <h3 style={{
+                fontSize: '0.9rem',
+                color: 'var(--text-muted)',
+                marginBottom: 'var(--space-xs)',
+                letterSpacing: '0.05em'
+              }}>
+                12-week progress map
+              </h3>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+              }}>
+                each mark is a day you showed up through affirmations, focus, or reflection
+              </p>
+            </div>
+
+            <div style={{
+              color: 'var(--amber-glow)',
+              fontSize: '0.85rem',
+              textAlign: 'right',
+            }}>
+              {stats?.today.journalEntriesCount || 0} journal today
+            </div>
           </div>
+          <ProgressActivityMap days={stats?.activityMap || []} />
         </section>
 
         {/* Quick Actions - Playful */}

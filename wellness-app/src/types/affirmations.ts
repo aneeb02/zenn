@@ -14,6 +14,7 @@ export interface DailyStats {
   date: string;
   affirmationsViewed: number;
   sessionMinutes: number;
+  journalEntriesCount: number;
   streakCount: number;
 }
 

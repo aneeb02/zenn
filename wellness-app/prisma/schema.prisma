@@ -79,6 +79,7 @@ model DailyStats {
   date               DateTime @db.Date
   affirmationsViewed Int      @default(0)
   sessionMinutes     Int      @default(0)
+  journalEntriesCount Int     @default(0)
   streakCount        Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

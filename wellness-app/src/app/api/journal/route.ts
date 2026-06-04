@@ -151,11 +151,14 @@ export async function POST(request: NextRequest) {
         },
       },
       update: {
-        // You might want to add a journalEntriesCount field to DailyStats
+        journalEntriesCount: {
+          increment: 1,
+        },
       },
       create: {
         userId: user.id,
         date: today,
+        journalEntriesCount: 1,
       },
     });
 
