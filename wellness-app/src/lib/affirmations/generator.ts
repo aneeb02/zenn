@@ -183,6 +183,41 @@ const AFFIRMATION_TEMPLATES: AffirmationTemplate[] = [
     category: "productivity",
     tone: "motivational"
   },
+  {
+    text: "You can absolutely turn your abstract ideas into tangible, deployed digital products.",
+    category: "productivity",
+    tone: "motivational"
+  },
+  {
+    text: "You have the drive to push your projects forward, one line of code, one algorithm, and one commit at a time.",
+    category: "productivity",
+    tone: "motivational"
+  },
+  {
+    text: "You don't need to know exactly how to build the entire system right now; you have the resourcefulness to figure it out as you go.",
+    category: "productivity",
+    tone: "encouraging"
+  },
+  {
+    text: "You can create your own motivation simply by taking action and starting with the smallest, easiest task.",
+    category: "productivity",
+    tone: "encouraging"
+  },
+  {
+    text: "You are building proof of your capability with every shipped feature.",
+    category: "productivity",
+    tone: "encouraging"
+  },
+  {
+    text: "A rough first version is not failure; it is the raw material of a better product.",
+    category: "productivity",
+    tone: "gentle"
+  },
+  {
+    text: "You can ruthlessly prioritize, saying no to distractions so you can say yes to shipping your work and graduating strong.",
+    category: "productivity",
+    tone: "motivational"
+  },
 
   // Focus/concentration
   {
@@ -199,6 +234,78 @@ const AFFIRMATION_TEMPLATES: AffirmationTemplate[] = [
     text: "You have the power to direct your attention where it serves you best.",
     category: "focus",
     tone: "motivational"
+  },
+  {
+    text: "You have the discipline to shut out the noise and focus entirely on the logic and tasks in front of you.",
+    category: "focus",
+    tone: "motivational"
+  },
+  {
+    text: "You can break down massive, multi-layered architectural problems into simple, manageable steps.",
+    category: "focus",
+    tone: "encouraging"
+  },
+  {
+    text: "You possess the mental endurance to debug difficult issues and optimize your systems, even when it gets frustrating.",
+    category: "focus",
+    tone: "encouraging"
+  },
+  {
+    text: "You can embrace the friction of learning a new stack or framework, knowing it directly expands your capabilities as an engineer.",
+    category: "focus",
+    tone: "encouraging"
+  },
+  {
+    text: "Your attention can return to the next useful step, even after interruptions.",
+    category: "focus",
+    tone: "gentle"
+  },
+  {
+    text: "You can find the bug by slowing down, reading carefully, and trusting the evidence in front of you.",
+    category: "focus",
+    tone: "gentle"
+  },
+  {
+    text: "Complex systems become understandable when you trace one path at a time.",
+    category: "focus",
+    tone: "encouraging"
+  },
+  {
+    text: "You can protect a small block of deep work and let it compound into real progress.",
+    category: "focus",
+    tone: "motivational"
+  },
+
+  // Pacing and balance
+  {
+    text: "You can balance the heavy, competing demands of your final semester and your professional role without burning out.",
+    category: "balance",
+    tone: "encouraging"
+  },
+  {
+    text: "You are allowed to step away from the screen; your brain often solves the hardest problems when you give it time to rest.",
+    category: "balance",
+    tone: "gentle"
+  },
+  {
+    text: "You can let go of the need to have a perfect, bug-free day; consistent, incremental progress is how great software is actually built.",
+    category: "balance",
+    tone: "gentle"
+  },
+  {
+    text: "Rest is not a break from becoming a better engineer; it is part of how you keep becoming one.",
+    category: "balance",
+    tone: "gentle"
+  },
+  {
+    text: "You can close the laptop before exhaustion turns good work into noisy work.",
+    category: "balance",
+    tone: "gentle"
+  },
+  {
+    text: "You can move with urgency without treating yourself like a machine.",
+    category: "balance",
+    tone: "encouraging"
   },
 ];
 
@@ -219,10 +326,12 @@ export async function generateDailyAffirmations(params: AffirmationParams): Prom
 
     // Include goal-specific affirmations
     const goalCategories = goals.map(goal => {
-      if (goal.includes('focus') || goal.includes('productivity')) return 'focus';
-      if (goal.includes('self-compassion')) return 'self-compassion';
-      if (goal.includes('stress')) return 'anxiety'; // Stress management overlaps with anxiety support
-      return goal;
+      const normalizedGoal = goal.toLowerCase();
+      if (normalizedGoal.includes('focus') || normalizedGoal.includes('productivity')) return 'focus';
+      if (normalizedGoal.includes('balance') || normalizedGoal.includes('burnout') || normalizedGoal.includes('rest') || normalizedGoal.includes('wellness')) return 'balance';
+      if (normalizedGoal.includes('self-compassion')) return 'self-compassion';
+      if (normalizedGoal.includes('stress')) return 'anxiety'; // Stress management overlaps with anxiety support
+      return normalizedGoal;
     });
 
     if (goalCategories.includes(template.category)) return true;
