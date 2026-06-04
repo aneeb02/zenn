@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 export interface ActivityMapDay {
   date: string;
   affirmationsViewed: number;
@@ -30,21 +32,25 @@ function chunkWeeks(days: ActivityMapDay[]) {
   return weeks;
 }
 
-function formatTooltip(day: ActivityMapDay) {
+function formatDateLabel(day: ActivityMapDay) {
   const date = new Date(`${day.date}T00:00:00`);
-  const label = date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
+    weekday: 'short',
   });
+}
+
+function formatActivityLabel(day: ActivityMapDay) {
   const sessionLabel = day.focusSessionsCount === 1 ? 'session' : 'sessions';
   const journalLabel = day.journalEntriesCount === 1 ? 'journal entry' : 'journal entries';
-  const affirmationLabel = day.affirmationsViewed === 1 ? 'affirmation' : 'affirmations';
 
-  return `${label}: ${day.focusSessionsCount} ${sessionLabel}, ${day.sessionMinutes} focus min, ${day.journalEntriesCount} ${journalLabel}, ${day.affirmationsViewed} ${affirmationLabel}`;
+  return `${day.focusSessionsCount} ${sessionLabel} • ${day.sessionMinutes} focus min • ${day.journalEntriesCount} ${journalLabel}`;
 }
 
 export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
   const weeks = chunkWeeks(days);
+  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
 
   return (
     <div>
@@ -64,25 +70,91 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
               flex: '0 0 auto',
             }}
           >
-            {week.map((day) => (
-              <div
-                key={day.date}
-                title={formatTooltip(day)}
-                aria-label={formatTooltip(day)}
-                style={{
-                  width: 'clamp(12px, 2vw, 17px)',
-                  aspectRatio: '1 / 1',
-                  borderRadius: '4px',
-                  background: INTENSITY_COLORS[day.intensity],
-                  border: day.completedFocusAndJournal
-                    ? '1px solid var(--amber-glow)'
-                    : '1px solid rgba(255, 255, 255, 0.07)',
-                  boxShadow: day.completedFocusAndJournal
-                    ? '0 0 12px rgba(194, 155, 108, 0.22)'
-                    : 'none',
-                }}
-              />
-            ))}
+            {week.map((day) => {
+              const isHovered = hoveredDay === day.date;
+
+              return (
+                <div
+                  key={day.date}
+                  onMouseEnter={() => setHoveredDay(day.date)}
+                  onMouseLeave={() => setHoveredDay(null)}
+                  onFocus={() => setHoveredDay(day.date)}
+                  onBlur={() => setHoveredDay(null)}
+                  tabIndex={0}
+                  aria-label={`${formatDateLabel(day)}: ${formatActivityLabel(day)}`}
+                  style={{
+                    position: 'relative',
+                    width: 'clamp(12px, 2vw, 17px)',
+                    aspectRatio: '1 / 1',
+                    outline: 'none',
+                  }}
+                >
+                  {isHovered && (
+                    <div
+                      role="tooltip"
+                      style={{
+                        position: 'absolute',
+                        left: '50%',
+                        bottom: 'calc(100% + 10px)',
+                        transform: 'translateX(-50%)',
+                        zIndex: 20,
+                        width: 'max-content',
+                        maxWidth: '220px',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: 'rgba(10, 10, 11, 0.96)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem',
+                        lineHeight: 1.4,
+                        pointerEvents: 'none',
+                        textAlign: 'center',
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      <strong style={{
+                        display: 'block',
+                        color: 'var(--off-white)',
+                        fontWeight: 500,
+                        marginBottom: '2px',
+                      }}>
+                        {formatDateLabel(day)}
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {formatActivityLabel(day)}
+                      </span>
+                      <span style={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '100%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '6px solid transparent',
+                        borderRight: '6px solid transparent',
+                        borderTop: '6px solid rgba(10, 10, 11, 0.96)',
+                      }} />
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '4px',
+                      background: INTENSITY_COLORS[day.intensity],
+                      border: day.completedFocusAndJournal
+                        ? '1px solid var(--amber-glow)'
+                        : '1px solid rgba(255, 255, 255, 0.07)',
+                      boxShadow: day.completedFocusAndJournal
+                        ? '0 0 12px rgba(194, 155, 108, 0.22)'
+                        : 'none',
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
