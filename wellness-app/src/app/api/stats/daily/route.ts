@@ -132,13 +132,15 @@ export async function GET(request: NextRequest) {
     }
 
     const week = activityMap.slice(-7);
+    const todayActivity = activityMap[activityMap.length - 1];
 
     return NextResponse.json({
-      today: todayStats || {
-        affirmationsViewed: 0,
-        sessionMinutes: 0,
-        journalEntriesCount: 0,
-        streakCount: 0,
+      today: {
+        affirmationsViewed: todayStats?.affirmationsViewed || 0,
+        sessionMinutes: todayStats?.sessionMinutes || 0,
+        focusSessionsCount: todayActivity?.focusSessionsCount || 0,
+        journalEntriesCount: todayStats?.journalEntriesCount || 0,
+        streakCount: todayStats?.streakCount || 0,
       },
       week,
       activityMap,

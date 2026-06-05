@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -29,6 +29,12 @@ type CompletionSummary = {
   intention: string;
   tasks: SessionTask[];
   checkedTaskIds: string[];
+};
+
+type DailyStatsResponse = {
+  today?: {
+    focusSessionsCount?: number;
+  };
 };
 
 const SESSION_MODES: SessionMode[] = [
@@ -114,11 +120,32 @@ export default function ZenFocusPage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const fetchTodaySessionCount = useCallback(async () => {
+    try {
+      const response = await fetch('/api/stats/daily', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) return;
+
+      const data: DailyStatsResponse = await response.json();
+      setCompletedSessions(data.today?.focusSessionsCount || 0);
+    } catch (error) {
+      console.error('Failed to load today session count:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (user) {
+      fetchTodaySessionCount();
+    }
+  }, [user, fetchTodaySessionCount]);
 
   useEffect(() => {
     if (isRunning && !isPaused && timeLeft > 0) {
@@ -185,7 +212,6 @@ export default function ZenFocusPage() {
   const handleSessionComplete = async () => {
     setIsRunning(false);
     setIsPaused(false);
-    setCompletedSessions((prev) => prev + 1);
     stopAmbientSound();
     playCompletionBeep();
 
@@ -199,7 +225,7 @@ export default function ZenFocusPage() {
     setCompletionSummary(summary);
 
     try {
-      await fetch('/api/focus-session', {
+      const response = await fetch('/api/focus-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -210,6 +236,12 @@ export default function ZenFocusPage() {
           intention: intention.trim() || undefined,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to save focus session');
+      }
+
+      await fetchTodaySessionCount();
 
       toast.success('Session saved.', {
         style: {
