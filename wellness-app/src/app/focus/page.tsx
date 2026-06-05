@@ -600,6 +600,16 @@ export default function ZenFocusPage() {
                   );
                 })}
               </div>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.85rem',
+                lineHeight: 1.6,
+                maxWidth: '520px',
+                margin: 'var(--space-md) auto 0',
+                textAlign: 'center',
+              }}>
+                {selectedMode.purpose}
+              </p>
             </section>
 
             <section className="zen-card" style={{
@@ -658,7 +668,7 @@ export default function ZenFocusPage() {
                           addTask();
                         }
                       }}
-                      disabled={isRunning || tasks.length >= 3}
+                      disabled={tasks.length >= 3}
                       placeholder={tasks.length >= 3 ? 'three is enough' : 'one concrete step...'}
                       style={{
                         minWidth: 0,
@@ -672,7 +682,7 @@ export default function ZenFocusPage() {
                         fontSize: '0.85rem',
                       }}
                     />
-                    <button className="zen-button" onClick={addTask} disabled={isRunning || tasks.length >= 3} style={{ padding: '10px 14px' }}>
+                    <button className="zen-button" onClick={addTask} disabled={tasks.length >= 3} style={{ padding: '10px 14px' }}>
                       add
                     </button>
                   </div>
@@ -711,20 +721,18 @@ export default function ZenFocusPage() {
                           }}>
                             {task.text}
                           </span>
-                          {!isRunning && (
-                            <button
-                              onClick={() => removeTask(task.id)}
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'var(--text-muted)',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                              }}
-                            >
-                              ×
-                            </button>
-                          )}
+                          <button
+                            onClick={() => removeTask(task.id)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                            }}
+                          >
+                            ×
+                          </button>
                         </div>
                       );
                     })}
