@@ -355,37 +355,39 @@ export default function ZenDashboard() {
         </section>
 
         {/* Progress Map - Real activity over the last 12 weeks */}
-        <section className="zen-card" style={{ marginBottom: 'var(--space-xl)' }}>
+        <section className="zen-card" style={{
+          maxWidth: '760px',
+          margin: '0 auto var(--space-xl)',
+          padding: 'var(--space-lg)',
+        }}>
           <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            gap: 'var(--space-md)',
-            alignItems: 'flex-start',
-            marginBottom: 'var(--space-lg)',
-            flexWrap: 'wrap',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'var(--space-xs)',
+            marginBottom: 'var(--space-md)',
+            textAlign: 'center',
           }}>
-            <div>
-              <h3 style={{
-                fontSize: '0.9rem',
-                color: 'var(--text-muted)',
-                marginBottom: 'var(--space-xs)',
-                letterSpacing: '0.05em'
-              }}>
-                12-week progress map
-              </h3>
-              <p style={{
-                color: 'var(--text-secondary)',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-              }}>
-                each mark is a day you showed up through affirmations, focus, or reflection
-              </p>
-            </div>
-
+            <h3 style={{
+              fontSize: '0.9rem',
+              color: 'var(--text-muted)',
+              marginBottom: '2px',
+              letterSpacing: '0.05em'
+            }}>
+              12-week progress map
+            </h3>
+            <p style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              lineHeight: 1.5,
+              maxWidth: '460px',
+            }}>
+              a quiet record of focus, reflection, and the days you kept showing up
+            </p>
             <div style={{
               color: 'var(--amber-glow)',
-              fontSize: '0.85rem',
-              textAlign: 'right',
+              fontSize: '0.8rem',
+              marginTop: '2px',
             }}>
               {stats?.today.journalEntriesCount || 0} journal today
             </div>

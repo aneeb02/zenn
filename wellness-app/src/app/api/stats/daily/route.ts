@@ -12,23 +12,24 @@ function toDateKey(date: Date) {
 function getIntensity({
   affirmationsViewed,
   sessionMinutes,
+  focusSessionsCount,
   journalEntriesCount,
 }: {
   affirmationsViewed: number;
   sessionMinutes: number;
+  focusSessionsCount: number;
   journalEntriesCount: number;
 }): 0 | 1 | 2 | 3 | 4 {
-  const activeTypes = [
-    affirmationsViewed > 0,
-    sessionMinutes > 0,
-    journalEntriesCount > 0,
-  ].filter(Boolean).length;
+  const activityCount =
+    focusSessionsCount +
+    journalEntriesCount +
+    Math.min(affirmationsViewed, 1);
 
-  if (activeTypes === 0) return 0;
-  if (sessionMinutes >= 45 || activeTypes > 1) return 4;
-  if (sessionMinutes >= 15) return 3;
-  if (journalEntriesCount > 0 || sessionMinutes > 0) return 2;
-  return 1;
+  if (activityCount === 0 && sessionMinutes === 0) return 0;
+  if (activityCount <= 1 && sessionMinutes < 15) return 1;
+  if (activityCount <= 2 && sessionMinutes < 30) return 2;
+  if (activityCount <= 3 && sessionMinutes < 45) return 3;
+  return 4;
 }
 
 export async function GET(request: NextRequest) {
@@ -98,17 +99,19 @@ export async function GET(request: NextRequest) {
 
       const affirmationsViewed = stat?.affirmationsViewed || 0;
       const sessionMinutes = stat?.sessionMinutes || 0;
+      const focusSessionsCount = focusSessionsByDate.get(dateKey) || 0;
       const journalEntriesCount = stat?.journalEntriesCount || 0;
 
       return {
         date: dateKey,
         affirmationsViewed,
         sessionMinutes,
-        focusSessionsCount: focusSessionsByDate.get(dateKey) || 0,
+        focusSessionsCount,
         journalEntriesCount,
         intensity: getIntensity({
           affirmationsViewed,
           sessionMinutes,
+          focusSessionsCount,
           journalEntriesCount,
         }),
         completedFocusAndJournal: sessionMinutes > 0 && journalEntriesCount > 0,

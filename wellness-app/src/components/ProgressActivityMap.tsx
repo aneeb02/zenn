@@ -18,10 +18,10 @@ interface ProgressActivityMapProps {
 
 const INTENSITY_COLORS: Record<ActivityMapDay['intensity'], string> = {
   0: 'rgba(255, 255, 255, 0.05)',
-  1: 'rgba(122, 154, 126, 0.28)',
-  2: 'rgba(122, 154, 126, 0.48)',
-  3: 'rgba(122, 154, 126, 0.72)',
-  4: 'rgba(168, 213, 186, 0.95)',
+  1: 'rgba(72, 96, 76, 0.55)',
+  2: 'rgba(92, 126, 98, 0.68)',
+  3: 'rgba(122, 154, 126, 0.84)',
+  4: 'rgba(168, 213, 186, 0.98)',
 };
 
 function chunkWeeks(days: ActivityMapDay[]) {
@@ -53,12 +53,20 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
 
   return (
-    <div>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    }}>
       <div style={{
         display: 'flex',
-        gap: '6px',
-        overflowX: 'auto',
-        paddingBottom: 'var(--space-sm)',
+        gap: '5px',
+        justifyContent: 'center',
+        overflow: 'visible',
+        padding: '18px 20px',
+        borderRadius: 'var(--radius-md)',
+        background: 'rgba(255, 255, 255, 0.025)',
+        border: '1px solid rgba(255, 255, 255, 0.045)',
       }}>
         {weeks.map((week, weekIndex) => (
           <div
@@ -66,7 +74,7 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
             style={{
               display: 'grid',
               gridTemplateRows: 'repeat(7, 1fr)',
-              gap: '6px',
+              gap: '5px',
               flex: '0 0 auto',
             }}
           >
@@ -84,7 +92,7 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
                   aria-label={`${formatDateLabel(day)}: ${formatActivityLabel(day)}`}
                   style={{
                     position: 'relative',
-                    width: 'clamp(12px, 2vw, 17px)',
+                    width: 'clamp(10px, 1.15vw, 14px)',
                     aspectRatio: '1 / 1',
                     outline: 'none',
                   }}
@@ -161,11 +169,12 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
 
       <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
-        gap: 'var(--space-md)',
+        justifyContent: 'center',
+        gap: 'var(--space-lg)',
         alignItems: 'center',
         flexWrap: 'wrap',
-        marginTop: 'var(--space-sm)',
+        marginTop: 'var(--space-md)',
+        width: '100%',
       }}>
         <div style={{
           display: 'flex',
@@ -174,7 +183,7 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
           color: 'var(--text-muted)',
           fontSize: '0.75rem',
         }}>
-          <span>empty</span>
+          <span>less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <span
               key={level}
@@ -188,7 +197,7 @@ export function ProgressActivityMap({ days }: ProgressActivityMapProps) {
               }}
             />
           ))}
-          <span>deep</span>
+          <span>more</span>
         </div>
 
         <div style={{
