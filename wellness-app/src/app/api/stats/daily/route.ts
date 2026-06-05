@@ -2,12 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/server';
 import { prisma } from '@/lib/db/prisma';
+import {
+  addDaysToDateKey,
+  dateKeyToLocalDate,
+  dateKeyToPrismaDate,
+  getLocalDateKey,
+  prismaDateToDateKey,
+} from '@/lib/date/daily-stats';
 
 const ACTIVITY_MAP_DAYS = 84;
-
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
 
 function getIntensity({
   affirmationsViewed,
@@ -36,8 +39,8 @@ export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayKey = getLocalDateKey();
+    const today = dateKeyToPrismaDate(todayKey);
 
     // Get today's stats
     const todayStats = await prisma.dailyStats.findUnique({
@@ -50,10 +53,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Get last 12 weeks of stats for the dashboard activity map
-    const activityStartDate = new Date(today);
-    activityStartDate.setDate(activityStartDate.getDate() - (ACTIVITY_MAP_DAYS - 1));
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const activityStartKey = addDaysToDateKey(todayKey, -(ACTIVITY_MAP_DAYS - 1));
+    const activityStartDate = dateKeyToPrismaDate(activityStartKey);
+    const tomorrowKey = addDaysToDateKey(todayKey, 1);
+    const focusSessionStartDate = dateKeyToLocalDate(activityStartKey);
+    const focusSessionEndDate = dateKeyToLocalDate(tomorrowKey);
 
     const activityStats = await prisma.dailyStats.findMany({
       where: {
@@ -72,8 +76,8 @@ export async function GET(request: NextRequest) {
       where: {
         userId: user.id,
         createdAt: {
-          gte: activityStartDate,
-          lt: tomorrow,
+          gte: focusSessionStartDate,
+          lt: focusSessionEndDate,
         },
       },
       select: {
@@ -82,19 +86,17 @@ export async function GET(request: NextRequest) {
     });
 
     const statsByDate = new Map(
-      activityStats.map((stat) => [toDateKey(stat.date), stat])
+      activityStats.map((stat) => [prismaDateToDateKey(stat.date), stat])
     );
 
     const focusSessionsByDate = new Map<string, number>();
     for (const session of focusSessions) {
-      const dateKey = toDateKey(session.createdAt);
+      const dateKey = getLocalDateKey(session.createdAt);
       focusSessionsByDate.set(dateKey, (focusSessionsByDate.get(dateKey) || 0) + 1);
     }
 
     const activityMap = Array.from({ length: ACTIVITY_MAP_DAYS }, (_, index) => {
-      const date = new Date(activityStartDate);
-      date.setDate(activityStartDate.getDate() + index);
-      const dateKey = toDateKey(date);
+      const dateKey = addDaysToDateKey(activityStartKey, index);
       const stat = statsByDate.get(dateKey);
 
       const affirmationsViewed = stat?.affirmationsViewed || 0;

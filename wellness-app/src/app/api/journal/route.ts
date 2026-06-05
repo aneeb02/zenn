@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db/prisma';
 import { requireAuth } from '@/lib/auth/server';
 import { createJournalEntrySchema, journalQuerySchema } from '@/lib/validations/api';
 import { AppError, buildErrorResponse } from '@/lib/utils/error-handler';
+import { dateKeyToPrismaDate, getLocalDateKey } from '@/lib/date/daily-stats';
 import { 
   encrypt, 
   packEncryptedData, 
@@ -140,8 +141,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Update daily stats
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = dateKeyToPrismaDate(getLocalDateKey());
     
     await prisma.dailyStats.upsert({
       where: {
