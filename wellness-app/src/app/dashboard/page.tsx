@@ -13,6 +13,7 @@ interface DailyStats {
   today: {
     affirmationsViewed: number;
     sessionMinutes: number;
+    focusSessionsCount: number;
     journalEntriesCount: number;
     streakCount: number;
   };
@@ -116,7 +117,7 @@ export default function ZenDashboard() {
       }
     } catch (error) {
       setStats({
-        today: { affirmationsViewed: 0, sessionMinutes: 0, journalEntriesCount: 0, streakCount: 0 },
+        today: { affirmationsViewed: 0, sessionMinutes: 0, focusSessionsCount: 0, journalEntriesCount: 0, streakCount: 0 },
         currentStreak: 0,
         week: [],
         activityMap: [],
