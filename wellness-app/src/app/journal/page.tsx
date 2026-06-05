@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -34,9 +34,10 @@ const moodEmojis: Record<string, string> = {
   neutral: '○',
 };
 
-export default function ZenJournalPage() {
+function ZenJournalPageContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isWriting, setIsWriting] = useState(false);
@@ -56,6 +57,17 @@ export default function ZenJournalPage() {
     '心を開けば、世界が開く • Open your heart, open the world',
   ];
   const [currentQuote] = useState(zenQuotes[Math.floor(Math.random() * zenQuotes.length)]);
+
+  useEffect(() => {
+    if (searchParams.get('write') !== 'true') return;
+
+    const prefillTitle = searchParams.get('title');
+    const prefillPrompt = searchParams.get('prompt');
+
+    setIsWriting(true);
+    if (prefillTitle) setTitle(prefillTitle);
+    if (prefillPrompt) setContent(prefillPrompt);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -439,5 +451,17 @@ export default function ZenJournalPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function ZenJournalPage() {
+  return (
+    <Suspense fallback={(
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)' }}>
+        <div className="zen-circle imperfect" style={{ width: '60px', height: '60px', opacity: 0.3 }} />
+      </div>
+    )}>
+      <ZenJournalPageContent />
+    </Suspense>
   );
 }

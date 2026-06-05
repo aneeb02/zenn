@@ -36,7 +36,8 @@ export const customAffirmationSchema = z.object({
 // Focus session validation schemas
 export const focusSessionSchema = z.object({
   duration: z.number().min(1, 'Duration must be at least 1 minute').max(240),
-  type: z.enum(['pomodoro', 'custom', 'meditation', 'deep-work']).default('custom'),
+  type: z.enum(['deep-work', 'study-sprint', 'debug-mode', 'ship-it', 'reset-break', 'custom']).default('custom'),
+  intention: z.string().max(240).optional(),
   ambientSound: z.string().nullable().optional(),
 });
 

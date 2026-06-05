@@ -64,6 +64,7 @@ model FocusSession {
   userId       String
   duration     Int
   type         String   @default("custom")
+  intention    String?
   ambientSound String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

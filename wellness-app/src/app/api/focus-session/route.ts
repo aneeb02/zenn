@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db/prisma';
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth(request);
-    const { duration, type, ambientSound } = await request.json();
+    const { duration, type, ambientSound, intention } = await request.json();
 
     if (!duration || duration < 1) {
       return NextResponse.json(
@@ -14,12 +14,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const sessionIntention =
+      typeof intention === 'string' && intention.trim().length > 0
+        ? intention.trim().slice(0, 240)
+        : null;
+
     // Create focus session record
     const session = await prisma.focusSession.create({
       data: {
         userId: user.id,
         duration,
         type: type || 'custom',
+        intention: sessionIntention,
         ambientSound: ambientSound || null,
       },
     });
