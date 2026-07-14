@@ -186,6 +186,9 @@ export default function ZenDashboard() {
           <Link href="/focus">
             <button className="zen-button">focus</button>
           </Link>
+          <Link href="/progress">
+            <button className="zen-button">progress</button>
+          </Link>
           <Link href="/settings">
             <button className="zen-button">settings</button>
           </Link>
@@ -397,6 +400,11 @@ export default function ZenDashboard() {
             </div>
           </div>
           <ProgressActivityMap days={stats?.activityMap || []} />
+          <div style={{ textAlign: 'center', marginTop: 'var(--space-md)' }}>
+            <Link href="/progress" style={{ color: 'var(--ocean-blue)', fontSize: '0.82rem' }}>
+              view full progress →
+            </Link>
+          </div>
         </section>
 
         {/* Quick Actions - Playful */}
