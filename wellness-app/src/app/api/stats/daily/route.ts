@@ -18,17 +18,20 @@ function getIntensity({
   focusSessionsCount,
   journalEntriesCount,
   tasksCompleted,
+  habitsCompleted,
 }: {
   affirmationsViewed: number;
   sessionMinutes: number;
   focusSessionsCount: number;
   journalEntriesCount: number;
   tasksCompleted: number;
+  habitsCompleted: number;
 }): 0 | 1 | 2 | 3 | 4 {
   const activityCount =
     focusSessionsCount +
     journalEntriesCount +
     tasksCompleted +
+    habitsCompleted +
     Math.min(affirmationsViewed, 1);
 
   if (activityCount === 0 && sessionMinutes === 0) return 0;
@@ -107,6 +110,7 @@ export async function GET(request: NextRequest) {
       const focusSessionsCount = focusSessionsByDate.get(dateKey) || 0;
       const journalEntriesCount = stat?.journalEntriesCount || 0;
       const tasksCompleted = stat?.tasksCompleted || 0;
+      const habitsCompleted = stat?.habitsCompleted || 0;
 
       return {
         date: dateKey,
@@ -115,12 +119,14 @@ export async function GET(request: NextRequest) {
         focusSessionsCount,
         journalEntriesCount,
         tasksCompleted,
+        habitsCompleted,
         intensity: getIntensity({
           affirmationsViewed,
           sessionMinutes,
           focusSessionsCount,
           journalEntriesCount,
           tasksCompleted,
+          habitsCompleted,
         }),
         completedFocusAndJournal: sessionMinutes > 0 && journalEntriesCount > 0,
       };
@@ -130,7 +136,7 @@ export async function GET(request: NextRequest) {
     let currentStreak = 0;
     for (let index = activityMap.length - 1; index >= 0; index--) {
       const stat = activityMap[index];
-      if (stat.affirmationsViewed > 0 || stat.sessionMinutes > 0 || stat.journalEntriesCount > 0 || stat.tasksCompleted > 0) {
+      if (stat.affirmationsViewed > 0 || stat.sessionMinutes > 0 || stat.journalEntriesCount > 0 || stat.tasksCompleted > 0 || stat.habitsCompleted > 0) {
         currentStreak++;
       } else {
         break;
@@ -147,6 +153,7 @@ export async function GET(request: NextRequest) {
         focusSessionsCount: todayActivity?.focusSessionsCount || 0,
         journalEntriesCount: todayStats?.journalEntriesCount || 0,
         tasksCompleted: todayStats?.tasksCompleted || 0,
+        habitsCompleted: todayStats?.habitsCompleted || 0,
         streakCount: todayStats?.streakCount || 0,
       },
       week,

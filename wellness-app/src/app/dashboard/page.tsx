@@ -65,12 +65,6 @@ export default function ZenDashboard() {
     // Load random quote
     const randomQuote = quotesData.quotes[Math.floor(Math.random() * quotesData.quotes.length)];
     setCurrentQuote(randomQuote);
-    
-    // Load saved affirmations from localStorage
-    const saved = localStorage.getItem('savedAffirmations');
-    if (saved) {
-      setSavedAffirmations(JSON.parse(saved));
-    }
   }, []);
 
   useEffect(() => {
@@ -85,8 +79,42 @@ export default function ZenDashboard() {
     if (user?.profile) {
       fetchDailyAffirmations();
       fetchStats();
+      fetchSavedAffirmations();
     }
   }, [user]);
+
+  const fetchSavedAffirmations = async () => {
+    try {
+      const response = await fetch('/api/affirmations/saved', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setSavedAffirmations((data.affirmations || []).map((a: { text: string }) => a.text));
+      }
+    } catch {
+      // non-critical
+    }
+  };
+
+  const handleSaveAffirmation = async () => {
+    const current = affirmations[currentAffirmationIndex];
+    if (!current || savedAffirmations.includes(current)) return;
+
+    // optimistic
+    setSavedAffirmations((prev) => [...prev, current]);
+    try {
+      const response = await fetch('/api/affirmations/saved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ text: current }),
+      });
+      if (!response.ok) throw new Error('failed');
+      toast.success('Saved to your reflections.');
+    } catch {
+      setSavedAffirmations((prev) => prev.filter((t) => t !== current));
+      toast.error('Could not save that one.');
+    }
+  };
 
   const fetchDailyAffirmations = async () => {
     try {
@@ -126,16 +154,8 @@ export default function ZenDashboard() {
   };
 
   const handleNextAffirmation = () => {
-    // Save current affirmation before moving to next
-    const currentAffirmation = affirmations[currentAffirmationIndex];
-    if (currentAffirmation && !savedAffirmations.includes(currentAffirmation)) {
-      const newSaved = [...savedAffirmations, currentAffirmation];
-      setSavedAffirmations(newSaved);
-      localStorage.setItem('savedAffirmations', JSON.stringify(newSaved));
-    }
-    
     setCurrentAffirmationIndex((prev) => (prev + 1) % affirmations.length);
-    
+
     // Also get a new quote
     const randomQuote = quotesData.quotes[Math.floor(Math.random() * quotesData.quotes.length)];
     setCurrentQuote(randomQuote);
@@ -182,6 +202,9 @@ export default function ZenDashboard() {
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           <Link href="/tasks">
             <button className="zen-button">tasks</button>
+          </Link>
+          <Link href="/habits">
+            <button className="zen-button">habits</button>
           </Link>
           <Link href="/focus">
             <button className="zen-button">focus</button>
@@ -270,14 +293,32 @@ export default function ZenDashboard() {
               </div>
             )}
             
-            <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button className="zen-button-playful" onClick={handleNextAffirmation}>
                 another one →
               </button>
+              {(() => {
+                const isSaved = savedAffirmations.includes(affirmations[currentAffirmationIndex]);
+                return (
+                  <button
+                    className="zen-button"
+                    onClick={handleSaveAffirmation}
+                    disabled={isSaved || !affirmations[currentAffirmationIndex]}
+                    style={{ color: isSaved ? 'var(--sakura-pink)' : undefined, borderColor: isSaved ? 'var(--sakura-pink)' : undefined }}
+                  >
+                    {isSaved ? '♥ saved' : '♡ save this'}
+                  </button>
+                );
+              })()}
               <Link href="/focus">
                 <button className="zen-button">begin focus session</button>
               </Link>
             </div>
+            {savedAffirmations.length > 0 && (
+              <p style={{ marginTop: 'var(--space-md)', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                {savedAffirmations.length} saved reflection{savedAffirmations.length === 1 ? '' : 's'}
+              </p>
+            )}
           </div>
         </section>
 
@@ -421,6 +462,12 @@ export default function ZenDashboard() {
               <button className="zen-button-playful">
                 <span style={{ marginRight: 'var(--space-xs)' }}>📝</span>
                 plan
+              </button>
+            </Link>
+            <Link href="/habits">
+              <button className="zen-button-playful">
+                <span style={{ marginRight: 'var(--space-xs)' }}>🌿</span>
+                habits
               </button>
             </Link>
             <Link href="/focus">

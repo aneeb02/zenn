@@ -68,6 +68,25 @@ export const taskQuerySchema = z.object({
   includeDone: z.coerce.boolean().optional().default(true),
 });
 
+// Habit validation schemas
+export const habitColorEnum = z.enum(['moss', 'ocean', 'sakura', 'amber', 'twilight']);
+
+export const createHabitSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(80, 'Name must be less than 80 characters'),
+  cadence: z.enum(['daily', 'weekly']).optional().default('daily'),
+  targetDays: z.number().int().min(1).max(7).optional().default(1),
+  color: habitColorEnum.optional().default('moss'),
+});
+
+export const updateHabitSchema = z.object({
+  name: z.string().min(1).max(80).optional(),
+  cadence: z.enum(['daily', 'weekly']).optional(),
+  targetDays: z.number().int().min(1).max(7).optional(),
+  color: habitColorEnum.optional(),
+  order: z.number().int().optional(),
+  archived: z.boolean().optional(),
+});
+
 // Query parameter schemas
 export const paginationSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -135,3 +154,6 @@ export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 export type TaskQueryParams = z.infer<typeof taskQuerySchema>;
 export type TaskStatus = z.infer<typeof taskStatusEnum>;
+export type CreateHabitInput = z.infer<typeof createHabitSchema>;
+export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;
+export type HabitColor = z.infer<typeof habitColorEnum>;

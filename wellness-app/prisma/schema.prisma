@@ -28,6 +28,8 @@ model User {
   stats          DailyStats[]
   journalEntries JournalEntry[]
   tasks          Task[]
+  habits         Habit[]
+  habitLogs      HabitLog[]
 }
 
 model Profile {
@@ -109,6 +111,7 @@ model DailyStats {
   sessionMinutes     Int      @default(0)
   journalEntriesCount Int     @default(0)
   tasksCompleted     Int      @default(0)
+  habitsCompleted    Int      @default(0)
   streakCount        Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -140,6 +143,38 @@ model JournalEntry {
   @@index([userId, createdAt])
   @@index([userId, mood])
   @@index([userId, tags])
+}
+
+model Habit {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  cadence    String    @default("daily") // daily | weekly
+  targetDays Int       @default(1)        // completions per week for weekly cadence
+  color      String    @default("moss")   // maps to a zen palette token
+  order      Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+
+  @@index([userId, archivedAt])
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId, date])
 }
 
 model JournalReflection {
