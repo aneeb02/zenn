@@ -6,7 +6,8 @@ import { dateKeyToPrismaDate, getLocalDateKey } from '@/lib/date/daily-stats';
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth(request);
-    const { duration, type, ambientSound, intention } = await request.json();
+    const { duration, type, ambientSound, intention, taskId, completedTasks } =
+      await request.json();
 
     if (!duration || duration < 1) {
       return NextResponse.json(
@@ -20,16 +21,43 @@ export async function POST(request: NextRequest) {
         ? intention.trim().slice(0, 240)
         : null;
 
+    // Verify the linked task belongs to this user before associating it
+    let linkedTaskId: string | null = null;
+    if (typeof taskId === 'string' && taskId.length > 0) {
+      const task = await prisma.task.findFirst({
+        where: { id: taskId, userId: user.id },
+        select: { id: true },
+      });
+      linkedTaskId = task?.id ?? null;
+    }
+
+    const taskSnapshot = Array.isArray(completedTasks)
+      ? completedTasks
+          .filter((t) => t && typeof t.text === 'string')
+          .slice(0, 10)
+          .map((t) => ({ text: String(t.text).slice(0, 240), done: Boolean(t.done) }))
+      : undefined;
+
     // Create focus session record
     const session = await prisma.focusSession.create({
       data: {
         userId: user.id,
+        taskId: linkedTaskId,
         duration,
         type: type || 'custom',
         intention: sessionIntention,
         ambientSound: ambientSound || null,
+        completedTasks: taskSnapshot,
       },
     });
+
+    // Roll the session's minutes up onto the linked task
+    if (linkedTaskId) {
+      await prisma.task.update({
+        where: { id: linkedTaskId },
+        data: { spentMins: { increment: duration } },
+      });
+    }
 
     // Update daily stats
     const today = dateKeyToPrismaDate(getLocalDateKey());

@@ -27,6 +27,7 @@ model User {
   sessions       FocusSession[]
   stats          DailyStats[]
   journalEntries JournalEntry[]
+  tasks          Task[]
 }
 
 model Profile {
@@ -60,18 +61,44 @@ model Affirmation {
 }
 
 model FocusSession {
-  id           String   @id @default(cuid())
-  userId       String
-  duration     Int
-  type         String   @default("custom")
-  intention    String?
-  ambientSound String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  taskId         String?
+  duration       Int
+  type           String   @default("custom")
+  intention      String?
+  ambientSound   String?
+  completedTasks Json?    // snapshot of the in-session checklist
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
   @@index([userId, createdAt])
+  @@index([taskId])
+}
+
+model Task {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  notes        String?
+  status       String    @default("todo") // todo | doing | done
+  priority     Int       @default(0)      // 0 none, 1 low, 2 med, 3 high
+  dueDate      DateTime? @db.Date
+  completedAt  DateTime?
+  estimateMins Int?                       // planned focus time
+  spentMins    Int       @default(0)      // rolled up from focus sessions
+  order        Int       @default(0)      // manual sort within a status
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions FocusSession[]
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
 }
 
 model DailyStats {
@@ -81,6 +108,7 @@ model DailyStats {
   affirmationsViewed Int      @default(0)
   sessionMinutes     Int      @default(0)
   journalEntriesCount Int     @default(0)
+  tasksCompleted     Int      @default(0)
   streakCount        Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

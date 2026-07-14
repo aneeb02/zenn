@@ -180,6 +180,9 @@ export default function ZenDashboard() {
         </div>
         
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+          <Link href="/tasks">
+            <button className="zen-button">tasks</button>
+          </Link>
           <Link href="/focus">
             <button className="zen-button">focus</button>
           </Link>
@@ -406,6 +409,12 @@ export default function ZenDashboard() {
             what would you like to do?
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/tasks">
+              <button className="zen-button-playful">
+                <span style={{ marginRight: 'var(--space-xs)' }}>📝</span>
+                plan
+              </button>
+            </Link>
             <Link href="/focus">
               <button className="zen-button-playful">
                 <span style={{ marginRight: 'var(--space-xs)' }}>🧘</span>
@@ -418,7 +427,7 @@ export default function ZenDashboard() {
                 reflect
               </button>
             </Link>
-            
+
           </div>
         </section>
       </main>

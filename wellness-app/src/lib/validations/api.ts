@@ -41,6 +41,33 @@ export const focusSessionSchema = z.object({
   ambientSound: z.string().nullable().optional(),
 });
 
+// Task validation schemas
+export const taskStatusEnum = z.enum(['todo', 'doing', 'done']);
+
+export const createTaskSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  notes: z.string().max(2000).optional(),
+  status: taskStatusEnum.optional().default('todo'),
+  priority: z.number().int().min(0).max(3).optional().default(0),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD').nullable().optional(),
+  estimateMins: z.number().int().min(0).max(1440).nullable().optional(),
+});
+
+export const updateTaskSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  status: taskStatusEnum.optional(),
+  priority: z.number().int().min(0).max(3).optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD').nullable().optional(),
+  estimateMins: z.number().int().min(0).max(1440).nullable().optional(),
+  order: z.number().int().optional(),
+});
+
+export const taskQuerySchema = z.object({
+  status: taskStatusEnum.optional(),
+  includeDone: z.coerce.boolean().optional().default(true),
+});
+
 // Query parameter schemas
 export const paginationSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -104,3 +131,7 @@ export type UpdateJournalEntryInput = z.infer<typeof updateJournalEntrySchema>;
 export type JournalQueryParams = z.infer<typeof journalQuerySchema>;
 export type CreateReflectionInput = z.infer<typeof createReflectionSchema>;
 export type JournalStatsParams = z.infer<typeof journalStatsSchema>;
+export type CreateTaskInput = z.infer<typeof createTaskSchema>;
+export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type TaskQueryParams = z.infer<typeof taskQuerySchema>;
+export type TaskStatus = z.infer<typeof taskStatusEnum>;

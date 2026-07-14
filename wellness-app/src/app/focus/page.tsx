@@ -37,6 +37,12 @@ type DailyStatsResponse = {
   };
 };
 
+type OpenTask = {
+  id: string;
+  title: string;
+  status: string;
+};
+
 const SESSION_MODES: SessionMode[] = [
   {
     id: 'deep-work',
@@ -116,6 +122,9 @@ export default function ZenFocusPage() {
   const [tasks, setTasks] = useState<SessionTask[]>([]);
   const [checkedTaskIds, setCheckedTaskIds] = useState<string[]>([]);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  const [openTasks, setOpenTasks] = useState<OpenTask[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTask = openTasks.find((task) => task.id === selectedTaskId) || null;
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -141,11 +150,33 @@ export default function ZenFocusPage() {
     }
   }, [user, loading, router]);
 
+  const fetchOpenTasks = useCallback(async () => {
+    try {
+      const response = await fetch('/api/tasks?includeDone=false', {
+        credentials: 'include',
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const tasks: OpenTask[] = data.tasks || [];
+      setOpenTasks(tasks);
+
+      // Preselect a task passed via ?taskId=... from the tasks page
+      const params = new URLSearchParams(window.location.search);
+      const requestedTaskId = params.get('taskId');
+      if (requestedTaskId && tasks.some((task) => task.id === requestedTaskId)) {
+        setSelectedTaskId(requestedTaskId);
+      }
+    } catch (error) {
+      console.error('Failed to load open tasks:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchTodaySessionCount();
+      fetchOpenTasks();
     }
-  }, [user, fetchTodaySessionCount]);
+  }, [user, fetchTodaySessionCount, fetchOpenTasks]);
 
   useEffect(() => {
     if (isRunning && !isPaused && timeLeft > 0) {
@@ -234,6 +265,11 @@ export default function ZenFocusPage() {
           type: selectedMode.id,
           ambientSound: selectedSound === 'none' ? null : selectedSound,
           intention: intention.trim() || undefined,
+          taskId: selectedTaskId || undefined,
+          completedTasks: tasks.map((task) => ({
+            text: task.text,
+            done: checkedTaskIds.includes(task.id),
+          })),
         }),
       });
 
@@ -242,6 +278,7 @@ export default function ZenFocusPage() {
       }
 
       await fetchTodaySessionCount();
+      await fetchOpenTasks();
 
       toast.success('Session saved.', {
         style: {
@@ -261,6 +298,24 @@ export default function ZenFocusPage() {
     setIsRunning(true);
     setIsPaused(false);
     startAmbientSound();
+
+    // Move the linked task into "in focus" so the tasks page reflects reality
+    if (selectedTask && selectedTask.status !== 'doing') {
+      fetch(`/api/tasks/${selectedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'doing' }),
+      })
+        .then(() => {
+          setOpenTasks((current) =>
+            current.map((task) =>
+              task.id === selectedTask.id ? { ...task, status: 'doing' } : task
+            )
+          );
+        })
+        .catch(() => undefined);
+    }
   };
 
   const handlePause = () => {
@@ -320,6 +375,17 @@ export default function ZenFocusPage() {
     setSoundVolume(newVolume);
     if (audioRef.current) {
       audioRef.current.volume = newVolume;
+    }
+  };
+
+  const handleSelectTask = (taskId: string) => {
+    const nextId = taskId || null;
+    setSelectedTaskId(nextId);
+
+    // Offer the task title as a starting intention if none is set yet
+    const task = openTasks.find((item) => item.id === nextId);
+    if (task && intention.trim().length === 0) {
+      setIntention(task.title.slice(0, 240));
     }
   };
 
@@ -642,6 +708,57 @@ export default function ZenFocusPage() {
               }}>
                 {selectedMode.purpose}
               </p>
+            </section>
+
+            <section className="zen-card" style={{
+              maxWidth: '760px',
+              margin: '0 auto var(--space-md)',
+              padding: 'var(--space-lg)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+                <label htmlFor="focus-task" style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                  focusing on
+                </label>
+                {openTasks.length > 0 ? (
+                  <select
+                    id="focus-task"
+                    value={selectedTaskId || ''}
+                    onChange={(event) => handleSelectTask(event.target.value)}
+                    disabled={isRunning}
+                    style={{
+                      flex: 1,
+                      minWidth: '200px',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-md)',
+                      color: selectedTask ? 'var(--sakura-pink)' : 'var(--text-secondary)',
+                      padding: '10px 12px',
+                      outline: 'none',
+                      fontSize: '0.9rem',
+                      fontFamily: 'var(--font-sans)',
+                      cursor: isRunning ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    <option value="">a free, unassigned block</option>
+                    {openTasks.map((task) => (
+                      <option key={task.id} value={task.id}>
+                        {task.title}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                    no open tasks —{' '}
+                    <Link href="/tasks" style={{ color: 'var(--ocean-blue)' }}>add one</Link>
+                    {' '}to track time against it
+                  </span>
+                )}
+              </div>
+              {selectedTask && (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 'var(--space-sm)' }}>
+                  This block&apos;s minutes will roll up onto “{selectedTask.title}”.
+                </p>
+              )}
             </section>
 
             <section className="zen-card" style={{
