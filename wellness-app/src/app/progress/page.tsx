@@ -11,7 +11,18 @@ interface WeekBucket {
   focusMinutes: number;
   sessions: number;
   tasksCompleted: number;
+  habitsCompleted: number;
   journalEntries: number;
+}
+
+interface HabitConsistency {
+  id: string;
+  name: string;
+  color: string;
+  cadence: string;
+  completions: number;
+  eligibleDays: number;
+  rate: number;
 }
 
 interface HourBucket {
@@ -26,6 +37,7 @@ interface ProgressData {
     totalFocusMinutes: number;
     totalSessions: number;
     totalTasksCompleted: number;
+    totalHabitsCompleted: number;
     totalJournalEntries: number;
     bestFocusHour: number | null;
     bestFocusMinutes: number;
@@ -33,7 +45,16 @@ interface ProgressData {
   weeks: WeekBucket[];
   focusByHour: HourBucket[];
   moods: { mood: string; count: number }[];
+  habitConsistency: HabitConsistency[];
 }
+
+const HABIT_COLOR_TOKENS: Record<string, string> = {
+  moss: 'var(--moss-green)',
+  ocean: 'var(--ocean-blue)',
+  sakura: 'var(--sakura-pink)',
+  amber: 'var(--amber-glow)',
+  twilight: 'var(--twilight-purple)',
+};
 
 const MOOD_EMOJI: Record<string, string> = {
   happy: '😊',
@@ -195,6 +216,7 @@ export default function ZenProgressPage() {
     !!data &&
     (data.summary.totalSessions > 0 ||
       data.summary.totalTasksCompleted > 0 ||
+      data.summary.totalHabitsCompleted > 0 ||
       data.summary.totalJournalEntries > 0);
 
   const maxMood = data ? Math.max(1, ...data.moods.map((m) => m.count)) : 1;
@@ -246,6 +268,7 @@ export default function ZenProgressPage() {
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
               <StatTile label="total focus" value={formatMinutes(data.summary.totalFocusMinutes)} sub={`${data.summary.totalSessions} sessions`} color="var(--ocean-blue)" />
               <StatTile label="tasks done" value={String(data.summary.totalTasksCompleted)} sub="completed" color="var(--moss-green)" />
+              <StatTile label="habits kept" value={String(data.summary.totalHabitsCompleted)} sub="check-ins" color="var(--amber-glow)" />
               <StatTile label="reflections" value={String(data.summary.totalJournalEntries)} sub="journal entries" color="var(--twilight-purple)" />
               <StatTile
                 label="best window"
@@ -301,6 +324,59 @@ export default function ZenProgressPage() {
               />
               <AxisLabels labels={data.weeks.map((w, i) => (i % 2 === 0 ? w.label.split(' ')[0] : ''))} />
             </ChartCard>
+
+            {/* Habits kept by week */}
+            {data.summary.totalHabitsCompleted > 0 && (
+              <ChartCard title="habits kept by week">
+                <BarChart
+                  color="var(--amber-glow)"
+                  bars={data.weeks.map((w) => ({
+                    label: w.label,
+                    value: w.habitsCompleted,
+                    tooltip: `${w.label}: ${w.habitsCompleted} check-ins`,
+                  }))}
+                />
+                <AxisLabels labels={data.weeks.map((w, i) => (i % 2 === 0 ? w.label.split(' ')[0] : ''))} />
+              </ChartCard>
+            )}
+
+            {/* Per-habit consistency */}
+            {data.habitConsistency.length > 0 && (
+              <ChartCard title="habit consistency" insight="share of eligible days each habit was kept.">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                  {data.habitConsistency.map((h) => {
+                    const color = HABIT_COLOR_TOKENS[h.color] || HABIT_COLOR_TOKENS.moss;
+                    return (
+                      <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                        <span style={{ width: '110px', flexShrink: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {h.name}
+                        </span>
+                        <div
+                          className="pg-bar-col"
+                          title={`${h.name}: ${h.completions} of ${h.eligibleDays} days · ${h.rate}%`}
+                          style={{ flex: 1, height: '16px', display: 'flex', alignItems: 'center' }}
+                        >
+                          <div
+                            className="pg-bar"
+                            style={{
+                              width: `${Math.max(2, h.rate)}%`,
+                              height: '10px',
+                              background: color,
+                              opacity: 0.7,
+                              borderRadius: '0 4px 4px 0',
+                              transition: 'opacity 0.2s ease',
+                            }}
+                          />
+                        </div>
+                        <span style={{ width: '40px', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', flexShrink: 0 }}>
+                          {h.rate}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ChartCard>
+            )}
 
             {/* Mood distribution */}
             {data.moods.length > 0 && (

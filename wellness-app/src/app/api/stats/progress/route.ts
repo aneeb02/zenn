@@ -6,6 +6,7 @@ import {
   addDaysToDateKey,
   dateKeyToLocalDate,
   getLocalDateKey,
+  prismaDateToDateKey,
 } from '@/lib/date/daily-stats';
 
 const RANGE_DAYS = 84; // 12 weeks
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     const rangeStart = dateKeyToLocalDate(startKey);
     const rangeEnd = dateKeyToLocalDate(addDaysToDateKey(todayKey, 1)); // exclusive upper bound
 
-    const [sessions, journals, dailyStats] = await Promise.all([
+    const [sessions, journals, dailyStats, habits, habitLogs] = await Promise.all([
       prisma.focusSession.findMany({
         where: { userId: user.id, createdAt: { gte: rangeStart, lt: rangeEnd } },
         select: { createdAt: true, duration: true },
@@ -42,7 +43,16 @@ export async function GET(request: NextRequest) {
       }),
       prisma.dailyStats.findMany({
         where: { userId: user.id, date: { gte: rangeStart } },
-        select: { date: true, tasksCompleted: true, journalEntriesCount: true, sessionMinutes: true },
+        select: { date: true, tasksCompleted: true, habitsCompleted: true, journalEntriesCount: true, sessionMinutes: true },
+      }),
+      prisma.habit.findMany({
+        where: { userId: user.id, archivedAt: null },
+        select: { id: true, name: true, color: true, cadence: true, targetDays: true, createdAt: true },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      }),
+      prisma.habitLog.findMany({
+        where: { userId: user.id, date: { gte: rangeStart } },
+        select: { habitId: true },
       }),
     ]);
 
@@ -55,6 +65,7 @@ export async function GET(request: NextRequest) {
         focusMinutes: 0,
         sessions: 0,
         tasksCompleted: 0,
+        habitsCompleted: 0,
         journalEntries: 0,
       };
     });
@@ -93,15 +104,46 @@ export async function GET(request: NextRequest) {
     }
 
     let totalTasksCompleted = 0;
+    let totalHabitsCompleted = 0;
     for (const stat of dailyStats) {
-      const key = getLocalDateKey(stat.date);
+      const key = prismaDateToDateKey(stat.date);
       const offset = dayOffset(startKey, key);
       const weekIndex = Math.floor(offset / 7);
       if (weekIndex >= 0 && weekIndex < WEEKS) {
         weeks[weekIndex].tasksCompleted += stat.tasksCompleted;
+        weeks[weekIndex].habitsCompleted += stat.habitsCompleted;
       }
       totalTasksCompleted += stat.tasksCompleted;
+      totalHabitsCompleted += stat.habitsCompleted;
     }
+
+    // Per-habit consistency over the range: completions vs. days the habit existed
+    const logCountByHabit = new Map<string, number>();
+    for (const log of habitLogs) {
+      logCountByHabit.set(log.habitId, (logCountByHabit.get(log.habitId) || 0) + 1);
+    }
+
+    const habitConsistency = habits.map((habit) => {
+      const createdKey = getLocalDateKey(habit.createdAt);
+      // Habit only "counts" from whichever is later: its creation or the range start
+      const effectiveStartKey = createdKey > startKey ? createdKey : startKey;
+      const eligibleDays = Math.max(1, dayOffset(effectiveStartKey, todayKey) + 1);
+      const completions = logCountByHabit.get(habit.id) || 0;
+      const denom =
+        habit.cadence === 'weekly'
+          ? Math.max(1, (eligibleDays / 7) * habit.targetDays)
+          : eligibleDays;
+      const rate = Math.min(1, completions / denom);
+      return {
+        id: habit.id,
+        name: habit.name,
+        color: habit.color,
+        cadence: habit.cadence,
+        completions,
+        eligibleDays,
+        rate: Math.round(rate * 100),
+      };
+    });
 
     // Best focus window: hour with the most accumulated minutes
     let bestFocusHour: number | null = null;
@@ -123,6 +165,7 @@ export async function GET(request: NextRequest) {
         totalFocusMinutes,
         totalSessions: sessions.length,
         totalTasksCompleted,
+        totalHabitsCompleted,
         totalJournalEntries: journals.length,
         bestFocusHour,
         bestFocusMinutes,
@@ -130,6 +173,7 @@ export async function GET(request: NextRequest) {
       weeks,
       focusByHour,
       moods,
+      habitConsistency,
     });
   } catch (error) {
     return buildErrorResponse(error);
